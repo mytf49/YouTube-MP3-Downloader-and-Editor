@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube MP3 Downloader and Editor</title>
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = saved === "light" || saved === "dark" ? saved : (prefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-elevated: #fafbfd;
+      --surface-subtle: #eef2f7;
+      --surface-hover: #e3e9f2;
+      --text: #0f172a;
+      --text-muted: #556175;
+      --border: #dde3ee;
+      --border-strong: #c2cbd9;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.09);
+      --ok: #15803d;
+      --ok-soft: rgba(21, 128, 61, 0.11);
+      --warn: #b45309;
+      --warn-soft: rgba(180, 83, 9, 0.11);
+      --err: #b91c1c;
+      --err-soft: rgba(185, 28, 28, 0.11);
+      --radius-lg: 20px;
+      --radius-md: 13px;
+      --radius-sm: 10px;
+      --shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 10px 28px rgba(15, 23, 42, 0.045);
+      --shadow-card: 0 8px 20px rgba(15, 23, 42, 0.065);
+      --focus: 0 0 0 3px rgba(37, 99, 235, 0.22);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b0f17;
+      --surface: #131924;
+      --surface-elevated: #171e2b;
+      --surface-subtle: #1b2332;
+      --surface-hover: #232d40;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #232d3f;
+      --border-strong: #344157;
+      --accent: #5b8df8;
+      --accent-hover: #75a1fa;
+      --accent-soft: rgba(91, 141, 248, 0.14);
+      --ok: #34d399;
+      --ok-soft: rgba(52, 211, 153, 0.13);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, 0.13);
+      --err: #f87171;
+      --err-soft: rgba(248, 113, 113, 0.14);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 34px rgba(0, 0, 0, 0.32);
+      --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.34);
+      --focus: 0 0 0 3px rgba(91, 141, 248, 0.28);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px 76px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.55rem;
+      font-weight: 720;
+      letter-spacing: -0.025em;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 550;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle:hover {
+      background: var(--surface-subtle);
+      border-color: var(--border-strong);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.98);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      content-visibility: auto;
+      contain-intrinsic-size: auto 420px;
+    }
+
+    .section-head {
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.18rem;
+      font-weight: 680;
+      letter-spacing: -0.015em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .section-sub {
+      margin: 5px 0 0 34px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .section-url {
+      margin: 6px 0 12px 34px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .section-url a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 550;
+    }
+
+    .section-url a:hover {
+      text-decoration: underline;
+    }
+
+    /* Section 1: Downloader Frame */
+    .frame-box {
+      position: relative;
+      width: 100%;
+      height: 325px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+    }
+
+    .frame-box iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* Inputs & Controls */
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .label-row label {
+      margin-bottom: 0;
+    }
+
+    .inline-mini-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+    }
+
+    .inline-mini-btn:hover:not(:disabled) {
+      background: var(--surface-subtle);
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .inline-mini-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .field-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-elevated);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    textarea {
+      height: auto;
+      padding: 10px 12px;
+      resize: vertical;
+      min-height: 82px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--text-muted);
+      opacity: 0.72;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: var(--focus);
+      background: var(--surface);
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 40px;
+      padding: 0 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface-subtle);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      height: 34px;
+      padding: 0 10px;
+      font-size: 0.82rem;
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    /* Section 2: Artwork Finder */
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .yt-block {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .yt-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .cleaned-preview {
+      margin-top: 7px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .cleaned-preview:empty {
+      display: none;
+    }
+
+    .cleaned-preview code {
+      background: var(--surface-subtle);
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: var(--text);
+      font-size: 0.78rem;
+    }
+
+    .autofill-row {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .toggle-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-check input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .status-bar {
+      margin-top: 14px;
+      padding: 10px 13px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-bar.show {
+      display: flex;
+    }
+
+    .status-bar.info {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .status-bar.ok {
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .status-bar.warn {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .status-bar.err {
+      background: var(--err-soft);
+      color: var(--err);
+    }
+
+    .results-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 14px;
+    }
+
+    .results-grid:empty {
+      margin-top: 0;
+    }
+
+    .skeleton-card {
+      padding: 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface-elevated);
+    }
+
+    .skeleton-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(90deg, var(--surface-subtle) 25%, var(--surface-hover) 50%, var(--surface-subtle) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.35s infinite linear;
+      margin-bottom: 9px;
+    }
+
+    .skeleton-line {
+      height: 12px;
+      border-radius: 6px;
+      background: var(--surface-subtle);
+      margin-bottom: 6px;
+    }
+
+    .skeleton-line.short {
+      width: 65%;
+      margin-bottom: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .result-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      background: var(--surface-elevated);
+      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .result-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-card);
+    }
+
+    .result-card:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .result-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .result-thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--surface-subtle);
+      margin-bottom: 9px;
+    }
+
+    .result-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      text-align: center;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      background: var(--surface-subtle);
+    }
+
+    .selected-badge {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 999px;
+      display: none;
+    }
+
+    .result-card.selected .selected-badge {
+      display: inline-block;
+    }
+
+    .result-title {
+      font-size: 0.86rem;
+      font-weight: 650;
+      color: var(--text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .result-artist {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result-meta {
+      margin-top: auto;
+      padding-top: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .tag-pill {
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: var(--surface-subtle);
+      font-weight: 600;
+      font-size: 0.68rem;
+    }
+
+    .tag-pill.noisy {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    /* Section 3: Tag Editor */
+    .dropzones-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .dropzone {
+      position: relative;
+      border: 1.5px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 15px;
+      background: var(--surface-subtle);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+      min-height: 106px;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .dropzone:focus-within {
+      box-shadow: var(--focus);
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .cover-preview-box {
+      width: 74px;
+      height: 74px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .cover-preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .dz-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .dz-title {
+      font-size: 0.88rem;
+      font-weight: 650;
+      color: var(--text);
+    }
+
+    .dz-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      word-break: break-word;
+    }
+
+    .queue-bar {
+      display: none;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+    }
+
+    .queue-bar.show {
+      display: block;
+    }
+
+    .queue-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .queue-list {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .queue-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.76rem;
+      font-weight: 550;
+      white-space: nowrap;
+      transition: border-color 0.14s ease, background-color 0.14s ease;
+    }
+
+    .queue-chip:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-hover);
+    }
+
+    .queue-chip.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 650;
+    }
+
+    .audio-preview-box {
+      display: none;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+    }
+
+    .audio-preview-box.show {
+      display: block;
+    }
+
+    .audio-preview-box audio {
+      width: 100%;
+      height: 34px;
+      display: block;
+    }
+
+    .file-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text);
+      max-width: 100%;
+    }
+
+    .file-pill span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .toolbar-actions {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px 16px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px 16px;
+      margin-top: 14px;
+    }
+
+    .export-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .full-span {
+      grid-column: 1 / -1;
+    }
+
+    .editor-footer {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .shortcut-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .search-row,
+      .yt-row,
+      .dropzones-grid,
+      .form-grid,
+      .form-grid-3,
+      .export-row {
+        grid-template-columns: 1fr;
+      }
+
+      .section-sub,
+      .section-url {
+        margin-left: 0;
+      }
+
+      .frame-box {
+        height: 290px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>YouTube MP3 Downloader and Editor</h1>
+        <p>Convert audio, verify 1000×1000 artwork, and write ID3 tags locally in your browser.</p>
+      </div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle color theme">
+        <span id="themeIcon" aria-hidden="true">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </header>
+
+    <main class="stack">
+      <!-- SECTION 1 -->
+      <section class="card" aria-labelledby="sec1-title">
+        <div class="section-head">
+          <h2 id="sec1-title" class="section-title">
+            <span class="step-badge">1</span>
+            <span>YouTube MP3 Downloader</span>
+          </h2>
+          <p class="section-sub">Convert your track in the compact frame below, then load the MP3 in Step 3.</p>
+          <p class="section-url">Source: <a href="https://ytmp3s.pl/" target="_blank" rel="noopener noreferrer">https://ytmp3s.pl/</a></p>
+        </div>
+        <div class="frame-box">
+          <iframe
+            src="https://ytmp3s.pl/"
+            title="YouTube MP3 Downloader (ytmp3s.pl)"
+            referrerpolicy="no-referrer"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section class="card" aria-labelledby="sec2-title">
+        <div class="section-head">
+          <h2 id="sec2-title" class="section-title">
+            <span class="step-badge">2</span>
+            <span>Album Finder</span>
+          </h2>
+          <p class="section-sub">Search iTunes for verified 1000×1000 covers or extract a clean title from a YouTube URL. Click a card to apply.</p>
+        </div>
+
+        <form id="searchForm" class="search-row">
+          <div>
+            <label for="searchInput">Search Query <span class="field-hint">(Artist, Song, or Album)</span></label>
+            <input id="searchInput" type="text" placeholder="e.g. Daft Punk Random Access Memories" autocomplete="off" />
+          </div>
+          <button id="searchBtn" class="btn btn-primary" type="submit">Find 1000×1000 Art</button>
+        </form>
+
+        <div class="yt-block">
+          <div class="yt-row">
+            <div>
+              <label for="ytUrlInput">YouTube URL <span class="field-hint">(optional — cleans noisy tags automatically)</span></label>
+              <input id="ytUrlInput" type="text" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." autocomplete="off" />
+            </div>
+            <button id="ytFetchBtn" class="btn btn-secondary" type="button">Use YouTube Title</button>
+          </div>
+          <div id="cleanedPreview" class="cleaned-preview"></div>
+        </div>
+
+        <div class="autofill-row">
+          <label class="toggle-check" for="autofillExtrasToggle">
+            <input id="autofillExtrasToggle" type="checkbox" />
+            <span>Also fill blank Year &amp; Genre when selecting a card</span>
+          </label>
+          <label class="toggle-check" for="hideNoisyToggle">
+            <input id="hideNoisyToggle" type="checkbox" />
+            <span>Hide Alt / Noisy results</span>
+          </label>
+        </div>
+
+        <div id="finderStatus" class="status-bar" role="status" aria-live="polite"></div>
+        <div id="resultsGrid" class="results-grid" aria-live="polite"></div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section class="card" aria-labelledby="sec3-title">
+        <div class="section-head">
+          <h2 id="sec3-title" class="section-title">
+            <span class="step-badge">3</span>
+            <span>MP3 ID3 Tag Editor</span>
+          </h2>
+          <p class="section-sub">Drop or browse your MP3 and cover art, edit metadata fields, and download the tagged file.</p>
+        </div>
+
+        <div class="dropzones-grid">
+          <div id="mp3Dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop or choose MP3 audio file">
+            <input id="mp3Input" type="file" accept=".mp3,audio/mpeg,audio/mp3" multiple />
+            <div class="cover-preview-box" id="mp3IconBox">MP3</div>
+            <div class="dz-copy">
+              <div class="dz-title" id="mp3DropTitle">Drop MP3(s) here or click to browse</div>
+              <div class="dz-sub" id="mp3DropSub">Reads existing tags &amp; guesses Song Name / Artist from filename</div>
+            </div>
+          </div>
+
+          <div id="coverDropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop or choose custom cover image">
+            <input id="coverInput" type="file" accept="image/*" />
+            <div class="cover-preview-box" id="coverPreviewBox">
+              <span>No Art</span>
+            </div>
+            <div class="dz-copy">
+              <div class="dz-title" id="coverDropTitle">Album Art (APIC)</div>
+              <div class="dz-sub" id="coverDropSub">Click a 1000×1000 card above or drop/choose a custom image</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="queueBar" class="queue-bar" aria-live="polite">
+          <div class="queue-top">
+            <span id="queueSummary">Queue (0 files)</span>
+            <button id="applySharedBtn" class="inline-mini-btn" type="button">Apply Album/Artist/Cover to Queue</button>
+          </div>
+          <div id="queueList" class="queue-list"></div>
+        </div>
+
+        <div id="audioPreviewBox" class="audio-preview-box">
+          <audio id="audioPreview" controls preload="metadata"></audio>
+        </div>
+
+        <div class="file-toolbar">
+          <div class="file-pill" id="activeFilePill">
+            <span>No MP3 loaded yet</span>
+          </div>
+          <div class="toolbar-actions">
+            <button id="titleCaseBtn" class="btn btn-ghost" type="button">
+              Aa Title Case
+            </button>
+            <button id="downloadCoverBtn" class="btn btn-ghost" type="button" disabled>
+              ↓ Save Cover
+            </button>
+            <button id="reguessBtn" class="btn btn-ghost" type="button" disabled>
+              ↻ Re-guess from filename
+            </button>
+            <button id="clearCoverBtn" class="btn btn-ghost" type="button" disabled>
+              ✕ Clear cover
+            </button>
+            <button id="clearFieldsBtn" class="btn btn-ghost" type="button">
+              Clear fields
+            </button>
+          </div>
+        </div>
+
+        <form id="tagForm">
+          <div class="form-grid">
+            <div>
+              <label for="tagTitle">Song Name / Title <span class="field-hint">(TIT2)</span></label>
+              <input id="tagTitle" type="text" placeholder="Song title" />
+            </div>
+
+            <div>
+              <label for="tagArtist">Artist <span class="field-hint">(TPE1)</span></label>
+              <input id="tagArtist" type="text" placeholder="Artist name" />
+            </div>
+
+            <div>
+              <label for="tagAlbum">Album <span class="field-hint">(TALB)</span></label>
+              <input id="tagAlbum" type="text" placeholder="Album name" />
+            </div>
+
+            <div>
+              <label for="tagAlbumArtist">Album Artist <span class="field-hint">(TPE2)</span></label>
+              <input id="tagAlbumArtist" type="text" placeholder="Album artist name" />
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div>
+              <label for="tagTrack">Track No. <span class="field-hint">(TRCK)</span></label>
+              <input id="tagTrack" type="text" placeholder="e.g. 1 or 1/12" />
+            </div>
+
+            <div>
+              <label for="tagDisc">Disc No. <span class="field-hint">(TPOS)</span></label>
+              <input id="tagDisc" type="text" placeholder="e.g. 1 or 1/2" />
+            </div>
+
+            <div>
+              <label for="tagYear">Year <span class="field-hint">(TYER)</span></label>
+              <input id="tagYear" type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" />
+            </div>
+
+            <div>
+              <label for="tagGenre">Genre <span class="field-hint">(TCON)</span></label>
+              <input id="tagGenre" type="text" placeholder="e.g. Electronic, Pop, Rock" />
+            </div>
+
+            <div>
+              <label for="tagComposer">Composer <span class="field-hint">(TCOM)</span></label>
+              <input id="tagComposer" type="text" placeholder="Composer name" />
+            </div>
+
+            <div>
+              <label for="tagBpm">BPM <span class="field-hint">(TBPM)</span></label>
+              <input id="tagBpm" type="number" min="1" max="999" step="1" placeholder="e.g. 120" />
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top: 14px;">
+            <div class="full-span">
+              <label for="tagComment">Comment <span class="field-hint">(COMM)</span></label>
+              <input id="tagComment" type="text" placeholder="Optional note or comment" />
+            </div>
+
+            <div class="full-span">
+              <label for="tagLyrics">Lyrics <span class="field-hint">(USLT)</span></label>
+              <textarea id="tagLyrics" rows="4" placeholder="Paste song lyrics here (optional)"></textarea>
+            </div>
+          </div>
+
+          <div class="export-row">
+            <div>
+              <div class="label-row">
+                <label for="exportFilenameInput">Export Filename <span class="field-hint">(defaults to Song Name; .mp3 added automatically)</span></label>
+                <button id="resetFilenameBtn" class="inline-mini-btn" type="button">Reset to Song Name</button>
+              </div>
+              <input id="exportFilenameInput" type="text" placeholder="Song name" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="editor-footer">
+            <div id="editorStatus" class="status-bar" style="margin-top: 0; flex: 1; min-width: 220px;" role="status" aria-live="polite"></div>
+            <button id="saveMp3Btn" class="btn btn-primary" type="submit">Write Tags &amp; Download MP3</button>
+          </div>
+          <div class="shortcut-note">Tip: Press Ctrl/Cmd + Enter to export, or Esc to clear status messages.</div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { ID3Writer } from "https://esm.sh/browser-id3-writer@6.1.0";
+
+    // --- Theme Management ---
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+    const themeLabel = document.getElementById("themeLabel");
+
+    function applyTheme(theme) {
+      const normalized = theme === "dark" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", normalized);
+      localStorage.setItem("theme", normalized);
+      const isDark = normalized === "dark";
+      themeIcon.textContent = isDark ? "☀️" : "🌙";
+      themeLabel.textContent = isDark ? "Light" : "Dark";
+    }
+
+    applyTheme(document.documentElement.getAttribute("data-theme") || "light");
+
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      applyTheme(current === "dark" ? "light" : "dark");
+    });
+
+    // --- State ---
+    const state = {
+      queue: [],
+      activeIndex: -1,
+      mp3File: null,
+      mp3Buffer: null,
+      audioUrl: null,
+      coverBytes: null,
+      coverMime: null,
+      coverPreviewUrl: null,
+      selectedArtworkUrl: null,
+      verifiedResults: [],
+      searchToken: 0,
+      searchController: null,
+      ytToken: 0,
+      ytController: null,
+      customFilenameDirty: false,
+    };
+
+    // --- DOM Elements ---
+    const searchForm = document.getElementById("searchForm");
+    const searchInput = document.getElementById("searchInput");
+    const searchBtn = document.getElementById("searchBtn");
+    const ytUrlInput = document.getElementById("ytUrlInput");
+    const ytFetchBtn = document.getElementById("ytFetchBtn");
+    const cleanedPreview = document.getElementById("cleanedPreview");
+    const autofillExtrasToggle = document.getElementById("autofillExtrasToggle");
+    const hideNoisyToggle = document.getElementById("hideNoisyToggle");
+    const finderStatus = document.getElementById("finderStatus");
+    const resultsGrid = document.getElementById("resultsGrid");
+
+    const mp3Dropzone = document.getElementById("mp3Dropzone");
+    const mp3Input = document.getElementById("mp3Input");
+    const mp3DropTitle = document.getElementById("mp3DropTitle");
+    const mp3DropSub = document.getElementById("mp3DropSub");
+    const mp3IconBox = document.getElementById("mp3IconBox");
+    const queueBar = document.getElementById("queueBar");
+    const queueSummary = document.getElementById("queueSummary");
+    const queueList = document.getElementById("queueList");
+    const applySharedBtn = document.getElementById("applySharedBtn");
+    const audioPreviewBox = document.getElementById("audioPreviewBox");
+    const audioPreview = document.getElementById("audioPreview");
+    const activeFilePill = document.getElementById("activeFilePill");
+    const titleCaseBtn = document.getElementById("titleCaseBtn");
+    const downloadCoverBtn = document.getElementById("downloadCoverBtn");
+    const reguessBtn = document.getElementById("reguessBtn");
+    const clearCoverBtn = document.getElementById("clearCoverBtn");
+    const clearFieldsBtn = document.getElementById("clearFieldsBtn");
+
+    const coverDropzone = document.getElementById("coverDropzone");
+    const coverInput = document.getElementById("coverInput");
+    const coverPreviewBox = document.getElementById("coverPreviewBox");
+    const coverDropSub = document.getElementById("coverDropSub");
+
+    const tagForm = document.getElementById("tagForm");
+    const tagTitle = document.getElementById("tagTitle");
+    const tagArtist = document.getElementById("tagArtist");
+    const tagAlbum = document.getElementById("tagAlbum");
+    const tagAlbumArtist = document.getElementById("tagAlbumArtist");
+    const tagTrack = document.getElementById("tagTrack");
+    const tagDisc = document.getElementById("tagDisc");
+    const tagYear = document.getElementById("tagYear");
+    const tagGenre = document.getElementById("tagGenre");
+    const tagComposer = document.getElementById("tagComposer");
+    const tagBpm = document.getElementById("tagBpm");
+    const tagComment = document.getElementById("tagComment");
+    const tagLyrics = document.getElementById("tagLyrics");
+    const exportFilenameInput = document.getElementById("exportFilenameInput");
+    const resetFilenameBtn = document.getElementById("resetFilenameBtn");
+    const editorStatus = document.getElementById("editorStatus");
+    const saveMp3Btn = document.getElementById("saveMp3Btn");
+
+    const latin1Decoder = new TextDecoder("latin1");
+    const utf8Decoder = new TextDecoder("utf-8");
+    const utf16LeDecoder = new TextDecoder("utf-16le");
+    const utf16BeDecoder = new TextDecoder("utf-16be");
+
+    function setStatus(el, type, message) {
+      if (!message) {
+        el.textContent = "";
+        el.className = "status-bar";
+        return;
+      }
+      el.textContent = message;
+      el.className = `status-bar show ${type}`;
+    }
+
+    function computeDefaultExportName() {
+      const title = tagTitle.value.trim();
+      if (title) return title;
+      if (state.mp3File) return state.mp3File.name.replace(/\.mp3$/i, "");
+      return "";
+    }
+
+    function syncExportFilenameIfNotDirty() {
+      if (!state.customFilenameDirty) {
+        exportFilenameInput.value = computeDefaultExportName();
+      }
+    }
+
+    exportFilenameInput.addEventListener("input", () => {
+      state.customFilenameDirty = exportFilenameInput.value.trim().length > 0;
+    });
+
+    resetFilenameBtn.addEventListener("click", () => {
+      state.customFilenameDirty = false;
+      exportFilenameInput.value = computeDefaultExportName();
+      setStatus(editorStatus, "info", "Export filename reset to Song Name.");
+    });
+
+    tagTitle.addEventListener("input", () => {
+      syncExportFilenameIfNotDirty();
+    });
+
+    function sanitizeFilenameBase(name) {
+      const cleaned = String(name || "")
+        .replace(/[\\/:*?"<>|]+/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return cleaned || "tagged-track";
+    }
+
+    function syncCoverButtons() {
+      const hasCover = Boolean(state.coverBytes && state.coverBytes.length > 0);
+      clearCoverBtn.disabled = !hasCover;
+      downloadCoverBtn.disabled = !hasCover;
+    }
+
+    function clearCoverState() {
+      if (state.coverPreviewUrl) {
+        URL.revokeObjectURL(state.coverPreviewUrl);
+        state.coverPreviewUrl = null;
+      }
+      state.coverBytes = null;
+      state.coverMime = null;
+      state.selectedArtworkUrl = null;
+      coverPreviewBox.innerHTML = `<span>No Art</span>`;
+      coverDropSub.textContent = "Click a 1000×1000 card above or drop/choose a custom image";
+      document.querySelectorAll(".result-card.selected").forEach((el) => {
+        el.classList.remove("selected");
+        el.setAttribute("aria-pressed", "false");
+      });
+      syncCoverButtons();
+    }
+
+    downloadCoverBtn.addEventListener("click", () => {
+      if (!state.coverBytes || !state.coverBytes.length) return;
+      const mime = state.coverMime || "image/jpeg";
+      const ext = mime.includes("png") ? "png" : (mime.includes("webp") ? "webp" : "jpg");
+      const base = sanitizeFilenameBase(tagAlbum.value.trim() || tagTitle.value.trim() || "cover");
+      const blob = new Blob([state.coverBytes], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${base}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      setStatus(editorStatus, "ok", `Downloaded cover "${base}.${ext}".`);
+    });
+
+    // --- Title Case Helper ---
+    function toTitleCase(str) {
+      const minorWords = new Set(["a", "an", "and", "as", "at", "but", "by", "for", "in", "nor", "of", "on", "or", "the", "to", "up", "yet"]);
+      const words = str.trim().split(/\s+/);
+      return words
+        .map((word, idx) => {
+          if (!word) return "";
+          const lower = word.toLowerCase();
+          if (idx > 0 && idx < words.length - 1 && minorWords.has(lower)) {
+            return lower;
+          }
+          return lower.replace(/(^|[-'/])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
+        })
+        .join(" ");
+    }
+
+    titleCaseBtn.addEventListener("click", () => {
+      [tagTitle, tagArtist, tagAlbum, tagAlbumArtist, tagGenre, tagComposer].forEach((inputEl) => {
+        if (inputEl.value.trim()) {
+          inputEl.value = toTitleCase(inputEl.value);
+        }
+      });
+      syncExportFilenameIfNotDirty();
+      setStatus(editorStatus, "info", "Formatted text metadata fields in Title Case.");
+    });
+
+    // --- Title & Filename Cleaning ---
+    const NOISE_PATTERNS = [
+      /\b(official\s*(music\s*)?(video|audio|lyric\s*video|visualizer|stream|mv|hd|4k))\b/gi,
+      /\b(lyrics?|lyric|audio\s*only|full\s*album|hq|lossless|flac|mp3|320kbps|remastered?)\b/gi,
+      /\b(4k\s*uhd|8k|1080p|720p|60fps)\b/gi,
+      /\b(feat\.?|ft\.?|featuring)\b[^(\[\]]*/gi,
+      /\b(karaoke|instrumental|tribute|remix|mix|edit|bootleg|mashup|slowed(?:\s*(?:and|&|\+)\s*reverb)?|sped\s*up|nightcore|live(?:\s*(?:at|from|session|performance))?|cover\s*(?:by)?|acapella|extended)\b/gi,
+    ];
+
+    function cleanTitleText(raw) {
+      if (!raw) return "";
+      let s = String(raw);
+      s = s.replace(/_/g, " ");
+      s = s.replace(/\[[^\]]*\]|\([^)]*\)/g, (match) => {
+        const inner = match.slice(1, -1).trim();
+        if (!inner) return " ";
+        const isNoisyBracket = NOISE_PATTERNS.some((rx) => {
+          rx.lastIndex = 0;
+          return rx.test(inner);
+        });
+        return isNoisyBracket ? " " : ` ${inner} `;
+      });
+
+      for (const rx of NOISE_PATTERNS) {
+        rx.lastIndex = 0;
+        s = s.replace(rx, " ");
+      }
+
+      s = s.replace(/\s*[|•·~]+\s*/g, " - ");
+      s = s.replace(/\s*-\s*-\s*/g, " - ");
+      s = s.replace(/\s{2,}/g, " ").trim();
+      s = s.replace(/^[-–—:,\s]+|[-–—:,\s]+$/g, "").trim();
+      return s;
+    }
+
+    function parseArtistAndTitle(rawName) {
+      let cleaned = cleanTitleText(rawName);
+      cleaned = cleaned.replace(/^\d{1,3}\s*[-–—.:)]\s*/, "").trim();
+      if (!cleaned) return { artist: "", title: "" };
+
+      const splitMatch = cleaned.match(/^(.+?)\s+[-–—:]\s+(.+)$/);
+      if (splitMatch) {
+        return {
+          artist: splitMatch[1].trim(),
+          title: splitMatch[2].trim(),
+        };
+      }
+      return { artist: "", title: cleaned };
+    }
+
+    function guessFromFilename(filename) {
+      const withoutExt = filename.replace(/\.[^/.]+$/, "");
+      const dotNormalized = withoutExt.replace(/\.(?=[A-Za-z0-9])/g, " ");
+      return parseArtistAndTitle(dotNormalized);
+    }
+
+    function applyFilenameGuess(filename, { syncSearch = true, overwriteExisting = true } = {}) {
+      const { artist, title } = guessFromFilename(filename);
+      if (title && (overwriteExisting || !tagTitle.value.trim())) {
+        tagTitle.value = title;
+      }
+      if (artist && (overwriteExisting || !tagArtist.value.trim())) {
+        tagArtist.value = artist;
+      }
+
+      const activeArtist = tagArtist.value.trim() || artist;
+      const activeTitle = tagTitle.value.trim() || title;
+      const query = [activeArtist, activeTitle].filter(Boolean).join(" ").trim() || cleanTitleText(filename.replace(/\.[^/.]+$/, ""));
+      if (syncSearch && query) {
+        searchInput.value = query;
+        performArtworkSearch(query);
+      }
+      return { artist, title, query };
+    }
+
+    // --- Existing ID3 Tag Reader (ID3v2.x + ID3v1 fallback) ---
+    function synchsafeToInt(b0, b1, b2, b3) {
+      return ((b0 & 0x7f) << 21) | ((b1 & 0x7f) << 14) | ((b2 & 0x7f) << 7) | (b3 & 0x7f);
+    }
+
+    function be32ToInt(b0, b1, b2, b3) {
+      return (((b0 << 24) >>> 0) + (b1 << 16) + (b2 << 8) + b3) >>> 0;
+    }
+
+    function decodeFrameText(bytes, encodingByte) {
+      if (!bytes || !bytes.length) return "";
+      let text = "";
+      if (encodingByte === 0) {
+        text = latin1Decoder.decode(bytes);
+      } else if (encodingByte === 1) {
+        const hasLeBom = bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe;
+        const hasBeBom = bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff;
+        const view = hasLeBom || hasBeBom ? bytes.subarray(2) : bytes;
+        text = (hasBeBom ? utf16BeDecoder : utf16LeDecoder).decode(view);
+      } else if (encodingByte === 2) {
+        const view = bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff ? bytes.subarray(2) : bytes;
+        text = utf16BeDecoder.decode(view);
+      } else {
+        text = utf8Decoder.decode(bytes);
+      }
+      return text.replace(/\0+$/, "").trim();
+    }
+
+    function removeUnsyncBytes(bytes) {
+      let hasPair = false;
+      for (let i = 0; i + 1 < bytes.length; i++) {
+        if (bytes[i] === 0xff && bytes[i + 1] === 0x00) {
+          hasPair = true;
+          break;
+        }
+      }
+      if (!hasPair) return bytes;
+      const out = new Uint8Array(bytes.length);
+      let w = 0;
+      for (let i = 0; i < bytes.length; i++) {
+        out[w++] = bytes[i];
+        if (bytes[i] === 0xff && i + 1 < bytes.length && bytes[i + 1] === 0x00) {
+          i++;
+        }
+      }
+      return out.subarray(0, w);
+    }
+
+    function parseExistingId3Tags(arrayBuffer) {
+      const view = new Uint8Array(arrayBuffer);
+      const found = {};
+
+      if (view.length >= 10 && view[0] === 0x49 && view[1] === 0x44 && view[2] === 0x33) {
+        const majorVersion = view[3];
+        const flags = view[5];
+        const tagUnsync = (flags & 0x80) !== 0;
+        const tagSize = synchsafeToInt(view[6], view[7], view[8], view[9]);
+        const endOffset = Math.min(view.length, 10 + tagSize);
+
+        let offset = 10;
+        if ((flags & 0x40) !== 0 && offset + 4 <= endOffset) {
+          const extSize = majorVersion === 4
+            ? synchsafeToInt(view[offset], view[offset + 1], view[offset + 2], view[offset + 3])
+            : be32ToInt(view[offset], view[offset + 1], view[offset + 2], view[offset + 3]);
+          offset += Math.max(0, extSize);
+        }
+
+        while (offset + 10 <= endOffset) {
+          if (view[offset] === 0x00) break;
+          const frameId = latin1Decoder.decode(view.subarray(offset, offset + 4));
+          const frameSize = majorVersion === 4
+            ? synchsafeToInt(view[offset + 4], view[offset + 5], view[offset + 6], view[offset + 7])
+            : be32ToInt(view[offset + 4], view[offset + 5], view[offset + 6], view[offset + 7]);
+          const frameFlags = (view[offset + 8] << 8) | view[offset + 9];
+          const dataStart = offset + 10;
+          const dataEnd = dataStart + frameSize;
+
+          if (frameSize <= 0 || dataEnd > endOffset) break;
+
+          let payload = view.subarray(dataStart, dataEnd);
+          const frameUnsync = tagUnsync || (majorVersion === 4 && (frameFlags & 0x0002) !== 0);
+          if (frameUnsync) {
+            payload = removeUnsyncBytes(payload);
+          }
+
+          if (majorVersion === 4 && (frameFlags & 0x0001) !== 0 && payload.length >= 4) {
+            payload = payload.subarray(4);
+          }
+
+          if (frameId === "APIC") {
+            const enc = payload[0];
+            let p = 1;
+            let mime = "";
+            if (majorVersion === 2) {
+              mime = latin1Decoder.decode(payload.subarray(p, p + 3)).toLowerCase();
+              p += 3;
+            } else {
+              const mimeEnd = payload.indexOf(0x00, p);
+              mime = mimeEnd !== -1
+                ? latin1Decoder.decode(payload.subarray(p, mimeEnd)).toLowerCase()
+                : "image/jpeg";
+              p = mimeEnd !== -1 ? mimeEnd + 1 : p;
+            }
+            if (p < payload.length) {
+              p += 1;
+              if (enc === 0 || enc === 3) {
+                const descEnd = payload.indexOf(0x00, p);
+                p = descEnd !== -1 ? descEnd + 1 : p;
+              } else {
+                let descEnd = -1;
+                for (let i = p; i + 1 < payload.length; i += 2) {
+                  if (payload[i] === 0x00 && payload[i + 1] === 0x00) {
+                    descEnd = i + 2;
+                    break;
+                  }
+                }
+                if (descEnd !== -1) p = descEnd;
+              }
+              if (p < payload.length) {
+                const imgBytes = payload.slice(p);
+                const normalizedMime = mime === "jpg" || !mime ? "image/jpeg" : (mime === "png" ? "image/png" : mime);
+                found.apic = { bytes: imgBytes, mime: normalizedMime };
+              }
+            }
+          } else if (frameId === "COMM" || frameId === "USLT") {
+            const enc = payload[0];
+            let p = 4;
+            if (enc === 0 || enc === 3) {
+              const descEnd = payload.indexOf(0x00, p);
+              p = descEnd !== -1 ? descEnd + 1 : p;
+            } else {
+              let descEnd = -1;
+              for (let i = p; i + 1 < payload.length; i += 2) {
+                if (payload[i] === 0x00 && payload[i + 1] === 0x00) {
+                  descEnd = i + 2;
+                  break;
+                }
+              }
+              if (descEnd !== -1) p = descEnd;
+            }
+            if (p < payload.length) {
+              found[frameId] = decodeFrameText(payload.subarray(p), enc);
+            }
+          } else if (frameId.startsWith("T")) {
+            const enc = payload[0];
+            const val = decodeFrameText(payload.subarray(1), enc);
+            if (val) found[frameId] = val;
+          }
+
+          offset = dataEnd;
+        }
+      }
+
+      if (view.length >= 128) {
+        const v1Start = view.length - 128;
+        if (view[v1Start] === 0x54 && view[v1Start + 1] === 0x41 && view[v1Start + 2] === 0x47) {
+          const v1Title = latin1Decoder.decode(view.subarray(v1Start + 3, v1Start + 33)).replace(/\0+$/, "").trim();
+          const v1Artist = latin1Decoder.decode(view.subarray(v1Start + 33, v1Start + 63)).replace(/\0+$/, "").trim();
+          const v1Album = latin1Decoder.decode(view.subarray(v1Start + 63, v1Start + 93)).replace(/\0+$/, "").trim();
+          const v1Year = latin1Decoder.decode(view.subarray(v1Start + 93, v1Start + 97)).replace(/\0+$/, "").trim();
+          const v1Comment = latin1Decoder.decode(view.subarray(v1Start + 97, v1Start + 127)).replace(/\0+$/, "").trim();
+
+          if (!found.TIT2 && v1Title) found.TIT2 = v1Title;
+          if (!found.TPE1 && v1Artist) found.TPE1 = v1Artist;
+          if (!found.TALB && v1Album) found.TALB = v1Album;
+          if (!found.TYER && v1Year) found.TYER = v1Year;
+          if (!found.COMM && v1Comment) found.COMM = v1Comment;
+        }
+      }
+
+      return found;
+    }
+
+    function applyExistingTagsToForm(tags) {
+      if (tags.TIT2) tagTitle.value = tags.TIT2;
+      if (tags.TPE1) tagArtist.value = tags.TPE1;
+      if (tags.TALB) tagAlbum.value = tags.TALB;
+      if (tags.TRCK) tagTrack.value = tags.TRCK;
+      if (tags.TPOS) tagDisc.value = tags.TPOS;
+      if (tags.TCON) tagGenre.value = tags.TCON;
+      if (tags.TCOM) tagComposer.value = tags.TCOM;
+      if (tags.TBPM) {
+        const bpmNum = parseInt(tags.TBPM, 10);
+        if (bpmNum >= 1 && bpmNum <= 999) tagBpm.value = String(bpmNum);
+      }
+      if (tags.COMM) tagComment.value = tags.COMM;
+      if (tags.USLT) tagLyrics.value = tags.USLT;
+
+      if (tags.apic && tags.apic.bytes && tags.apic.bytes.length > 0) {
+        state.coverBytes = tags.apic.bytes;
+        state.coverMime = tags.apic.mime || "image/jpeg";
+        setCoverPreviewFromBytes(state.coverBytes, state.coverMime, "Embedded MP3 cover");
+      }
+    }
+
+    // --- YouTube oEmbed ---
+    function isLikelyYouTubeUrl(url) {
+      return /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)/i.test(url.trim());
+    }
+
+    async function fetchYouTubeTitle(url) {
+      const trimmed = url.trim();
+      if (!trimmed) {
+        setStatus(finderStatus, "warn", "Paste a YouTube video URL first.");
+        return;
+      }
+      if (!isLikelyYouTubeUrl(trimmed)) {
+        setStatus(finderStatus, "warn", "That doesn't look like a standard YouTube video URL.");
+        return;
+      }
+
+      if (state.ytController) state.ytController.abort();
+      const controller = new AbortController();
+      state.ytController = controller;
+      const token = ++state.ytToken;
+
+      ytFetchBtn.disabled = true;
+      setStatus(finderStatus, "info", "Fetching video title via YouTube oEmbed...");
+
+      try {
+        const endpoint = `https://www.youtube.com/oembed?url=${encodeURIComponent(trimmed)}&format=json`;
+        const res = await fetch(endpoint, { signal: controller.signal });
+        if (!res.ok) throw new Error(`oEmbed returned ${res.status}`);
+        const data = await res.json();
+        if (token !== state.ytToken) return;
+
+        const rawTitle = data?.title || "";
+        if (!rawTitle) throw new Error("No title found in oEmbed response");
+
+        const cleaned = cleanTitleText(rawTitle);
+        cleanedPreview.innerHTML = `Raw: <code>${escapeHtml(rawTitle)}</code> → Cleaned: <code>${escapeHtml(cleaned || rawTitle)}</code>`;
+
+        const queryToUse = cleaned || rawTitle;
+        searchInput.value = queryToUse;
+
+        const parsed = parseArtistAndTitle(rawTitle);
+        if (parsed.title && !tagTitle.value.trim()) tagTitle.value = parsed.title;
+        if (parsed.artist && !tagArtist.value.trim()) tagArtist.value = parsed.artist;
+        syncExportFilenameIfNotDirty();
+
+        await performArtworkSearch(queryToUse);
+      } catch (err) {
+        if (err.name === "AbortError" || token !== state.ytToken) return;
+        setStatus(finderStatus, "warn", `Could not fetch YouTube title (${err.message}). Try typing the song or artist directly.`);
+      } finally {
+        if (token === state.ytToken) {
+          ytFetchBtn.disabled = false;
+        }
+      }
+    }
+
+    ytFetchBtn.addEventListener("click", () => fetchYouTubeTitle(ytUrlInput.value));
+
+    let ytDebounce = null;
+    ytUrlInput.addEventListener("input", () => {
+      clearTimeout(ytDebounce);
+      const val = ytUrlInput.value.trim();
+      if (!val) {
+        cleanedPreview.textContent = "";
+        return;
+      }
+      if (isLikelyYouTubeUrl(val)) {
+        ytDebounce = setTimeout(() => fetchYouTubeTitle(val), 450);
+      }
+    });
+
+    // --- iTunes 1000x1000 Artwork Search ---
+    function upgradeTo1000bb(url) {
+      if (!url) return "";
+      return url.replace(/\/\d+x\d+bb(?=[.-])/i, "/1000x1000bb");
+    }
+
+    function verifyExact1000x1000(url, signal) {
+      return new Promise((resolve) => {
+        if (signal?.aborted) {
+          resolve(null);
+          return;
+        }
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+
+        const cleanup = () => {
+          clearTimeout(timer);
+          img.onload = null;
+          img.onerror = null;
+          signal?.removeEventListener("abort", onAbort);
+        };
+
+        const onAbort = () => {
+          cleanup();
+          img.src = "";
+          resolve(null);
+        };
+
+        const timer = setTimeout(() => {
+          cleanup();
+          img.src = "";
+          resolve(null);
+        }, 7000);
+
+        signal?.addEventListener("abort", onAbort, { once: true });
+
+        img.onload = () => {
+          cleanup();
+          if (img.naturalWidth === 1000 && img.naturalHeight === 1000) {
+            resolve(img);
+          } else {
+            resolve(null);
+          }
+        };
+
+        img.onerror = () => {
+          cleanup();
+          resolve(null);
+        };
+
+        img.src = url;
+      });
+    }
+
+    const NOISY_RELEASE_RX = /\b(karaoke|tribute|remix|slowed|sped\s*up|live|various\s*artists|instrumental|cover|nightcore|8-bit|lullaby)\b/i;
+
+    function scoreCandidate(item, query) {
+      const artist = (item.artistName || "").toLowerCase();
+      const track = (item.trackName || "").toLowerCase();
+      const collection = (item.collectionName || "").toLowerCase();
+      const q = query.toLowerCase();
+      const combined = `${artist} ${track} ${collection}`;
+
+      let score = 0;
+      const isNoisy = NOISY_RELEASE_RX.test(combined) || artist === "various artists";
+      if (isNoisy) {
+        score -= 100;
+      } else {
+        score += 40;
+      }
+
+      if (item.wrapperType === "track" && item.trackName) score += 15;
+      if (item.collectionName) score += 10;
+
+      const terms = q.split(/\s+/).filter((t) => t.length > 1);
+      for (const t of terms) {
+        if (artist.includes(t)) score += 12;
+        if (track.includes(t)) score += 12;
+        if (collection.includes(t)) score += 8;
+      }
+
+      return { score, isNoisy };
+    }
+
+    function renderSkeletons(count = 6) {
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement("div");
+        card.className = "skeleton-card";
+        card.setAttribute("aria-hidden", "true");
+        card.innerHTML = `
+          <div class="skeleton-box"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        `;
+        frag.appendChild(card);
+      }
+      resultsGrid.replaceChildren(frag);
+    }
+
+    async function performArtworkSearch(rawQuery) {
+      const query = rawQuery.trim();
+      if (!query) {
+        setStatus(finderStatus, "warn", "Enter a song, artist, or album to search for artwork.");
+        return;
+      }
+
+      if (state.searchController) state.searchController.abort();
+      const controller = new AbortController();
+      state.searchController = controller;
+      const token = ++state.searchToken;
+
+      searchBtn.disabled = true;
+      renderSkeletons(6);
+      setStatus(finderStatus, "info", "Searching iTunes and verifying exact 1000×1000 artwork...");
+
+      try {
+        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=25`;
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) throw new Error(`iTunes API returned ${res.status}`);
+        const data = await res.json();
+        if (token !== state.searchToken || controller.signal.aborted) return;
+
+        const rawItems = Array.isArray(data.results) ? data.results : [];
+        const candidatesMap = new Map();
+
+        for (const item of rawItems) {
+          const baseArt = item.artworkUrl100 || item.artworkUrl60;
+          const art1000 = upgradeTo1000bb(baseArt);
+          if (!art1000 || candidatesMap.has(art1000)) continue;
+
+          const { score, isNoisy } = scoreCandidate(item, query);
+          candidatesMap.set(art1000, {
+            url: art1000,
+            title: item.trackName || item.collectionName || "Untitled",
+            artist: item.artistName || "Unknown Artist",
+            album: item.collectionName || "",
+            releaseYear: item.releaseDate ? String(item.releaseDate).slice(0, 4) : "",
+            genre: item.primaryGenreName || "",
+            score,
+            isNoisy,
+          });
+        }
+
+        const sorted = Array.from(candidatesMap.values()).sort((a, b) => b.score - a.score);
+
+        const verified = [];
+        const batchSize = 8;
+        for (let i = 0; i < sorted.length; i += batchSize) {
+          if (token !== state.searchToken || controller.signal.aborted) return;
+          const batch = sorted.slice(i, i + batchSize);
+          const checks = await Promise.all(
+            batch.map(async (cand) => {
+              const img = await verifyExact1000x1000(cand.url, controller.signal);
+              return img ? cand : null;
+            })
+          );
+          for (const okItem of checks) {
+            if (okItem) verified.push(okItem);
+          }
+          if (verified.length >= 12) break;
+        }
+
+        if (token !== state.searchToken || controller.signal.aborted) return;
+
+        verified.sort((a, b) => b.score - a.score);
+        state.verifiedResults = verified;
+
+        if (!verified.length) {
+          resultsGrid.innerHTML = "";
+          setStatus(finderStatus, "warn", "No verified 1000×1000 covers found for that query. Try a broader artist or album name, or upload a custom image below.");
+          return;
+        }
+
+        renderArtworkResults();
+      } catch (err) {
+        if (err.name === "AbortError" || token !== state.searchToken) return;
+        state.verifiedResults = [];
+        resultsGrid.innerHTML = "";
+        setStatus(finderStatus, "err", `Artwork search failed: ${err.message}`);
+      } finally {
+        if (token === state.searchToken) {
+          searchBtn.disabled = false;
+        }
+      }
+    }
+
+    hideNoisyToggle.addEventListener("change", () => {
+      if (state.verifiedResults.length) {
+        renderArtworkResults();
+      }
+    });
+
+    function renderArtworkResults() {
+      const hideNoisy = hideNoisyToggle.checked;
+      const visibleItems = hideNoisy
+        ? state.verifiedResults.filter((item) => !item.isNoisy)
+        : state.verifiedResults;
+
+      if (!visibleItems.length) {
+        resultsGrid.innerHTML = "";
+        setStatus(finderStatus, "warn", "All verified 1000×1000 results were marked Alt/Noisy. Uncheck 'Hide Alt / Noisy results' to view them.");
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+
+      visibleItems.forEach((item) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "result-card";
+        const isSelected = state.selectedArtworkUrl === item.url;
+        if (isSelected) {
+          card.classList.add("selected");
+        }
+        card.setAttribute("aria-pressed", isSelected ? "true" : "false");
+
+        card.innerHTML = `
+          <div class="result-thumb-wrap">
+            <img src="${escapeAttr(item.url)}" alt="${escapeAttr(item.title)} by ${escapeAttr(item.artist)}" loading="lazy" decoding="async" />
+            <span class="selected-badge">Selected</span>
+          </div>
+          <div class="result-title">${escapeHtml(item.title)}</div>
+          <div class="result-artist">${escapeHtml(item.artist)}</div>
+          <div class="result-meta">
+            <span>1000×1000</span>
+            <span class="tag-pill ${item.isNoisy ? "noisy" : ""}">${item.isNoisy ? "Alt/Noisy" : "Studio/Main"}</span>
+          </div>
+        `;
+
+        const thumbImg = card.querySelector("img");
+        const thumbWrap = card.querySelector(".result-thumb-wrap");
+        thumbImg.addEventListener("error", () => {
+          if (thumbWrap.querySelector(".thumb-fallback")) return;
+          thumbImg.style.display = "none";
+          const fb = document.createElement("div");
+          fb.className = "thumb-fallback";
+          fb.textContent = "Preview unavailable";
+          thumbWrap.appendChild(fb);
+        });
+
+        card.addEventListener("click", () => selectArtworkCard(item, card));
+        frag.appendChild(card);
+      });
+
+      resultsGrid.replaceChildren(frag);
+      setStatus(finderStatus, "ok", `Showing ${visibleItems.length} verified 1000×1000 cover${visibleItems.length === 1 ? "" : "s"}. Click any card to apply it to Step 3.`);
+    }
+
+    async function selectArtworkCard(item, clickedCard) {
+      setStatus(editorStatus, "info", "Loading 1000×1000 cover image...");
+
+      try {
+        const res = await fetch(item.url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const arrayBuf = await blob.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuf);
+        if (!bytes.length) throw new Error("Empty image response");
+
+        document.querySelectorAll(".result-card.selected").forEach((el) => {
+          el.classList.remove("selected");
+          el.setAttribute("aria-pressed", "false");
+        });
+        clickedCard.classList.add("selected");
+        clickedCard.setAttribute("aria-pressed", "true");
+        state.selectedArtworkUrl = item.url;
+        state.coverBytes = bytes;
+        state.coverMime = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+        syncCoverButtons();
+
+        if (item.title) tagTitle.value = item.title;
+        if (item.artist) tagArtist.value = item.artist;
+        if (item.album) tagAlbum.value = item.album;
+
+        if (autofillExtrasToggle.checked) {
+          if (item.releaseYear && !tagYear.value.trim()) tagYear.value = item.releaseYear;
+          if (item.genre && !tagGenre.value.trim()) tagGenre.value = item.genre;
+        }
+
+        syncExportFilenameIfNotDirty();
+        setCoverPreviewFromBytes(state.coverBytes, state.coverMime, "Confirmed 1000×1000 iTunes cover");
+        setStatus(editorStatus, "ok", `Confirmed "${item.title}" cover and populated tags.`);
+      } catch (err) {
+        setStatus(editorStatus, "warn", `Could not fetch cover bytes (${err.message}). Selection kept unchanged; drop a custom cover image if needed.`);
+      }
+    }
+
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      performArtworkSearch(searchInput.value);
+    });
+
+    // --- Cover Preview & Custom Upload ---
+    function setCoverPreviewFromBytes(bytes, mime, labelText) {
+      if (state.coverPreviewUrl) {
+        URL.revokeObjectURL(state.coverPreviewUrl);
+        state.coverPreviewUrl = null;
+      }
+      const blob = new Blob([bytes], { type: mime || "image/jpeg" });
+      state.coverPreviewUrl = URL.createObjectURL(blob);
+      coverPreviewBox.innerHTML = `<img src="${escapeAttr(state.coverPreviewUrl)}" alt="Album art preview" />`;
+      coverDropSub.textContent = labelText || "Cover ready for embedding";
+      syncCoverButtons();
+    }
+
+    async function handleCustomCoverFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        setStatus(editorStatus, "err", "Please choose a valid image file (JPEG or PNG) for album art.");
+        return;
+      }
+
+      try {
+        const buf = await file.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        if (!bytes.length) throw new Error("Empty image file");
+
+        state.selectedArtworkUrl = null;
+        document.querySelectorAll(".result-card.selected").forEach((el) => {
+          el.classList.remove("selected");
+          el.setAttribute("aria-pressed", "false");
+        });
+        state.coverBytes = bytes;
+        state.coverMime = file.type;
+        setCoverPreviewFromBytes(state.coverBytes, state.coverMime, `Custom: ${file.name}`);
+        setStatus(editorStatus, "ok", `Loaded custom cover "${file.name}".`);
+      } catch (err) {
+        setStatus(editorStatus, "err", `Could not read cover image: ${err.message}`);
+      }
+    }
+
+    coverInput.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (file) handleCustomCoverFile(file);
+      coverInput.value = "";
+    });
+
+    clearCoverBtn.addEventListener("click", () => {
+      clearCoverState();
+      setStatus(editorStatus, "info", "Cleared cover art.");
+    });
+
+    clearFieldsBtn.addEventListener("click", () => {
+      tagForm.reset();
+      state.customFilenameDirty = false;
+      exportFilenameInput.value = computeDefaultExportName();
+      setStatus(editorStatus, "info", "Cleared all metadata fields.");
+    });
+
+    // --- MP3 Queue, Loading & Drag/Drop ---
+    function setAudioPreviewFromFile(file) {
+      if (state.audioUrl) {
+        URL.revokeObjectURL(state.audioUrl);
+        state.audioUrl = null;
+      }
+      state.audioUrl = URL.createObjectURL(file);
+      audioPreview.src = state.audioUrl;
+      audioPreviewBox.classList.add("show");
+    }
+
+    function renderQueueUI() {
+      if (state.queue.length <= 1) {
+        queueBar.classList.remove("show");
+        return;
+      }
+      queueBar.classList.add("show");
+      queueSummary.textContent = `Queue (${state.queue.length} MP3 files — click a track to switch)`;
+      const frag = document.createDocumentFragment();
+      state.queue.forEach((entry, idx) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "queue-chip" + (idx === state.activeIndex ? " active" : "");
+        chip.textContent = `${idx + 1}. ${entry.file.name}`;
+        chip.addEventListener("click", () => loadQueueIndex(idx));
+        frag.appendChild(chip);
+      });
+      queueList.replaceChildren(frag);
+    }
+
+    applySharedBtn.addEventListener("click", () => {
+      if (!state.queue.length) return;
+      const sharedAlbum = tagAlbum.value.trim();
+      const sharedAlbumArtist = tagAlbumArtist.value.trim();
+      const sharedYear = tagYear.value.trim();
+      const sharedGenre = tagGenre.value.trim();
+      const sharedCover = state.coverBytes ? new Uint8Array(state.coverBytes) : null;
+      const sharedMime = state.coverMime;
+
+      state.queue.forEach((entry) => {
+        if (sharedAlbum) entry.overrides.TALB = sharedAlbum;
+        if (sharedAlbumArtist) entry.overrides.TPE2 = sharedAlbumArtist;
+        if (sharedYear) entry.overrides.TYER = sharedYear;
+        if (sharedGenre) entry.overrides.TCON = sharedGenre;
+        if (sharedCover) {
+          entry.sharedCoverBytes = sharedCover;
+          entry.sharedCoverMime = sharedMime;
+        }
+      });
+
+      setStatus(editorStatus, "ok", `Applied shared metadata/cover to all ${state.queue.length} queued MP3s.`);
+    });
+
+    async function loadQueueIndex(index) {
+      const entry = state.queue[index];
+      if (!entry) return;
+      state.activeIndex = index;
+      renderQueueUI();
+
+      state.mp3File = entry.file;
+      state.mp3Buffer = entry.buffer;
+      setAudioPreviewFromFile(entry.file);
+      clearCoverState();
+
+      activeFilePill.innerHTML = `<span>🎵 ${escapeHtml(entry.file.name)} (${(entry.file.size / (1024 * 1024)).toFixed(2)} MB)</span>`;
+      mp3DropTitle.textContent = entry.file.name;
+      mp3DropSub.textContent = state.queue.length > 1 ? `${state.queue.length} MP3s in queue · Drop more to add` : "Drop another MP3 to replace";
+      mp3IconBox.textContent = "MP3 ✓";
+      reguessBtn.disabled = false;
+
+      tagForm.reset();
+      state.customFilenameDirty = false;
+
+      const existingTags = parseExistingId3Tags(entry.buffer);
+      const hasExisting = Object.keys(existingTags).some((k) => k !== "apic") || Boolean(existingTags.apic);
+      if (hasExisting) {
+        applyExistingTagsToForm(existingTags);
+      }
+
+      const guessed = applyFilenameGuess(entry.file.name, {
+        syncSearch: true,
+        overwriteExisting: !hasExisting,
+      });
+
+      if (entry.overrides.TALB) tagAlbum.value = entry.overrides.TALB;
+      if (entry.overrides.TPE2) tagAlbumArtist.value = entry.overrides.TPE2;
+      if (entry.overrides.TYER) tagYear.value = entry.overrides.TYER;
+      if (entry.overrides.TCON) tagGenre.value = entry.overrides.TCON;
+      if (entry.sharedCoverBytes) {
+        state.coverBytes = entry.sharedCoverBytes;
+        state.coverMime = entry.sharedCoverMime || "image/jpeg";
+        setCoverPreviewFromBytes(state.coverBytes, state.coverMime, "Shared queue cover");
+      }
+
+      exportFilenameInput.value = computeDefaultExportName();
+
+      const finalArtist = tagArtist.value.trim() || guessed.artist || "—";
+      const finalTitle = tagTitle.value.trim() || guessed.title || "—";
+      setStatus(
+        editorStatus,
+        "ok",
+        `Loaded "${entry.file.name}"${hasExisting ? " (with existing ID3 tags)" : ""}. Artist: "${finalArtist}" · Title: "${finalTitle}"`
+      );
+    }
+
+    async function handleMp3Files(fileList) {
+      const files = Array.from(fileList || []).filter(
+        (f) => f.name.toLowerCase().endsWith(".mp3") || f.type === "audio/mpeg" || f.type === "audio/mp3"
+      );
+      if (!files.length) {
+        setStatus(editorStatus, "err", "Please select or drop valid .mp3 audio file(s).");
+        return;
+      }
+
+      try {
+        const entries = await Promise.all(
+          files.map(async (file) => ({
+            file,
+            buffer: await file.arrayBuffer(),
+            overrides: {},
+            sharedCoverBytes: null,
+            sharedCoverMime: null,
+          }))
+        );
+
+        state.queue = entries;
+        await loadQueueIndex(0);
+      } catch (err) {
+        setStatus(editorStatus, "err", `Could not read MP3 file: ${err.message}`);
+      }
+    }
+
+    mp3Input.addEventListener("change", (e) => {
+      const files = e.target.files;
+      if (files && files.length) handleMp3Files(files);
+      mp3Input.value = "";
+    });
+
+    reguessBtn.addEventListener("click", () => {
+      if (!state.mp3File) return;
+      const guessed = applyFilenameGuess(state.mp3File.name, {
+        syncSearch: false,
+        overwriteExisting: true,
+      });
+      syncExportFilenameIfNotDirty();
+      setStatus(
+        editorStatus,
+        "info",
+        `Re-guessed from filename → Artist: "${guessed.artist || "—"}" · Title: "${guessed.title || "—"}"`
+      );
+    });
+
+    function wireDropzone(zoneEl, fileInputEl, onFiles) {
+      zoneEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          if (document.activeElement === zoneEl) {
+            e.preventDefault();
+            fileInputEl.click();
+          }
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((evtName) => {
+        zoneEl.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          zoneEl.classList.add("dragover");
+        });
+      });
+
+      ["dragleave", "dragend", "drop"].forEach((evtName) => {
+        zoneEl.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          zoneEl.classList.remove("dragover");
+        });
+      });
+
+      zoneEl.addEventListener("drop", (e) => {
+        const files = e.dataTransfer?.files;
+        if (files && files.length) onFiles(files);
+      });
+    }
+
+    wireDropzone(mp3Dropzone, mp3Input, handleMp3Files);
+    wireDropzone(coverDropzone, coverInput, (files) => handleCustomCoverFile(files[0]));
+
+    // --- ID3 Tag Writing & Download ---
+    let revokeTimer = null;
+
+    function exportTaggedMp3() {
+      if (!state.mp3Buffer || !state.mp3File) {
+        setStatus(editorStatus, "err", "Load an MP3 file first in Step 3 before writing ID3 tags.");
+        return;
+      }
+
+      const yearRaw = tagYear.value.trim();
+      if (yearRaw && !/^\d{4}$/.test(yearRaw)) {
+        setStatus(editorStatus, "err", "Year must be a 4-digit number (e.g. 2024).");
+        return;
+      }
+
+      const bpmRaw = tagBpm.value.trim();
+      if (bpmRaw) {
+        const bpmNum = Number(bpmRaw);
+        if (!Number.isInteger(bpmNum) || bpmNum < 1 || bpmNum > 999) {
+          setStatus(editorStatus, "err", "BPM must be a whole number between 1 and 999.");
+          return;
+        }
+      }
+
+      saveMp3Btn.disabled = true;
+      setStatus(editorStatus, "info", "Writing ID3 tags...");
+
+      try {
+        const writer = new ID3Writer(state.mp3Buffer);
+
+        const titleVal = tagTitle.value.trim();
+        const artistVal = tagArtist.value.trim();
+        const albumVal = tagAlbum.value.trim();
+        const albumArtistVal = tagAlbumArtist.value.trim();
+        const trackVal = tagTrack.value.trim();
+        const discVal = tagDisc.value.trim();
+        const genreVal = tagGenre.value.trim();
+        const composerVal = tagComposer.value.trim();
+        const commentVal = tagComment.value.trim();
+        const lyricsVal = tagLyrics.value;
+
+        if (titleVal) writer.setFrame("TIT2", titleVal);
+        if (artistVal) writer.setFrame("TPE1", [artistVal]);
+        if (albumVal) writer.setFrame("TALB", albumVal);
+        if (albumArtistVal) writer.setFrame("TPE2", albumArtistVal);
+        if (trackVal) writer.setFrame("TRCK", trackVal);
+        if (discVal) writer.setFrame("TPOS", discVal);
+        if (yearRaw) {
+          writer.setFrame("TYER", Number(yearRaw));
+        }
+        if (genreVal) writer.setFrame("TCON", [genreVal]);
+        if (composerVal) writer.setFrame("TCOM", [composerVal]);
+        if (bpmRaw) {
+          writer.setFrame("TBPM", Number(bpmRaw));
+        }
+        if (commentVal) {
+          writer.setFrame("COMM", {
+            description: "",
+            text: commentVal,
+            language: "eng",
+          });
+        }
+        if (lyricsVal.trim()) {
+          writer.setFrame("USLT", {
+            description: "",
+            lyrics: lyricsVal,
+            language: "eng",
+          });
+        }
+        if (state.coverBytes && state.coverBytes.length > 0) {
+          writer.setFrame("APIC", {
+            type: 3,
+            data: state.coverBytes,
+            description: "Cover",
+            mimeType: state.coverMime || "image/jpeg",
+          });
+        }
+
+        writer.addTag();
+        const taggedBlob = writer.getBlob();
+        const downloadUrl = URL.createObjectURL(taggedBlob);
+
+        const rawExportName = exportFilenameInput.value.trim() || computeDefaultExportName();
+        const cleanBase = sanitizeFilenameBase(rawExportName.replace(/\.mp3$/i, ""));
+        const outName = `${cleanBase}.mp3`;
+
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = outName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        clearTimeout(revokeTimer);
+        revokeTimer = setTimeout(() => URL.revokeObjectURL(downloadUrl), 4000);
+        setStatus(editorStatus, "ok", `Downloaded "${outName}" with updated ID3 tags.`);
+      } catch (err) {
+        setStatus(editorStatus, "err", `Failed to write ID3 tags: ${err.message}`);
+      } finally {
+        saveMp3Btn.disabled = false;
+      }
+    }
+
+    tagForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      exportTaggedMp3();
+    });
+
+    // --- Keyboard Shortcuts ---
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        exportTaggedMp3();
+      } else if (e.key === "Escape") {
+        setStatus(finderStatus, "", "");
+        setStatus(editorStatus, "", "");
+      }
+    });
+
+    window.addEventListener("pagehide", () => {
+      if (state.coverPreviewUrl) URL.revokeObjectURL(state.coverPreviewUrl);
+      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+    });
+
+    // --- Helpers ---
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/'/g, "&#39;");
+    }
+  </script>
+</body>
+</html>
