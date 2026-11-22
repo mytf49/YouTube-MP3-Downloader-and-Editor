@@ -450,6 +450,7 @@
       display: none;
       align-items: center;
       gap: 8px;
+      overflow-wrap: anywhere;
     }
 
     .status-bar.show {
@@ -976,7 +977,7 @@
         <div class="autofill-row">
           <label class="toggle-check" for="autofillExtrasToggle">
             <input id="autofillExtrasToggle" type="checkbox" />
-            <span>Also fill blank Year &amp; Genre when selecting a card</span>
+            <span>Also fill blank Year & Genre when selecting a card</span>
           </label>
           <label class="toggle-check" for="hideNoisyToggle">
             <input id="hideNoisyToggle" type="checkbox" />
@@ -1004,7 +1005,7 @@
             <div class="cover-preview-box" id="mp3IconBox">MP3</div>
             <div class="dz-copy">
               <div class="dz-title" id="mp3DropTitle">Drop MP3(s) here or click to browse</div>
-              <div class="dz-sub" id="mp3DropSub">Reads existing tags &amp; guesses Song Name / Artist from filename</div>
+              <div class="dz-sub" id="mp3DropSub">Reads existing tags & guesses Song Name / Artist from filename</div>
             </div>
           </div>
 
@@ -1134,7 +1135,7 @@
 
           <div class="editor-footer">
             <div id="editorStatus" class="status-bar" style="margin-top: 0; flex: 1; min-width: 220px;" role="status" aria-live="polite"></div>
-            <button id="saveMp3Btn" class="btn btn-primary" type="submit">Write Tags &amp; Download MP3</button>
+            <button id="saveMp3Btn" class="btn btn-primary" type="submit">Write Tags & Download MP3</button>
           </div>
           <div class="shortcut-note">Tip: Press Ctrl/Cmd + Enter to export, or Esc to clear status messages.</div>
         </form>
@@ -1731,7 +1732,7 @@
           cleanup();
           img.src = "";
           resolve(null);
-        }, 15000);
+        }, 5000);
 
         signal?.addEventListener("abort", onAbort, { once: true });
 
@@ -1859,7 +1860,7 @@
           for (const okItem of checks) {
             if (okItem) verified.push(okItem);
           }
-          if (verified.length >= 12) break;
+          if (verified.length >= 6) break;
         }
 
         if (token !== state.searchToken || controller.signal.aborted) return;
@@ -1869,7 +1870,7 @@
 
         if (!verified.length) {
           resultsGrid.innerHTML = "";
-          setStatus(finderStatus, "warn", "No verified 1000×1000 covers found for that query. Try a broader artist or album name, or upload a custom image below.");
+          setStatus(finderStatus, "warn", `No verified 1000×1000 covers found for "${query}" (${rawItems.length} iTunes items checked). Try a broader artist or album name, or upload a custom image below.`);
           return;
         }
 
@@ -1878,7 +1879,7 @@
         if (err.name === "AbortError" || token !== state.searchToken) return;
         state.verifiedResults = [];
         resultsGrid.innerHTML = "";
-        setStatus(finderStatus, "err", `Artwork search failed: ${err.message}`);
+        setStatus(finderStatus, "err", `Artwork search failed (${err.name || "Error"}): ${err.message}`);
       } finally {
         if (token === state.searchToken) {
           searchBtn.disabled = false;
@@ -1987,7 +1988,6 @@
       }
     }
 
-    // Prevent native form navigation/reload on Enter or button click
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -2378,14 +2378,14 @@
     // --- Helpers ---
     function escapeHtml(str) {
       return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, """);
     }
 
     function escapeAttr(str) {
-      return escapeHtml(str).replace(/'/g, "&#39;");
+      return escapeHtml(str).replace(/'/g, "'");
     }
   </script>
 </body>
