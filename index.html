@@ -350,12 +350,18 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .yt-pull-row {
       display: flex;
       gap: 8px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
     .source-switcher {
@@ -394,25 +400,6 @@
     .source-pill.active {
       background: var(--accent);
       color: #ffffff;
-    }
-
-    .lastfm-key-bar {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 9px 10px;
-      margin-bottom: 10px;
-      display: none;
-    }
-
-    .lastfm-key-bar.open {
-      display: block;
-    }
-
-    .search-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
     }
 
     .toggles-row {
@@ -950,36 +937,23 @@
             </div>
           </div>
 
-          <!-- Source Switcher: Last.fm / iTunes & Deezer / All -->
-          <div class="source-switcher">
-            <div class="source-pills" role="tablist" aria-label="Artwork Search Source">
-              <button type="button" class="source-pill active" data-source="lastfm">Last.fm</button>
-              <button type="button" class="source-pill" data-source="itunes">iTunes & Deezer</button>
-              <button type="button" class="source-pill" data-source="all">All Sources</button>
-            </div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button id="toggleLastfmKeyBtn" type="button" class="sm" title="Configure Last.fm API key">Last.fm Key</button>
-              <a id="openLastfmWebBtn" href="https://www.last.fm/search/albums" target="_blank" rel="noopener noreferrer" class="sm" style="display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);font-size:0.8rem;font-weight:500;">
-                Last.fm Web ↗
-              </a>
-            </div>
-          </div>
-
-          <div id="lastfmKeyBar" class="lastfm-key-bar">
-            <label for="lastfmApiKeyInput" style="display:block;font-size:0.75rem;font-weight:600;color:var(--text-muted);margin-bottom:5px;">
-              Last.fm API Key (saved in browser • <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">Get a free key</a>)
-            </label>
-            <div style="display:flex;gap:6px;">
-              <input id="lastfmApiKeyInput" type="text" placeholder="Paste your Last.fm API key..." />
-              <button id="saveLastfmKeyBtn" type="button" class="sm primary">Save</button>
-            </div>
-          </div>
-
-          <!-- Song / Artist / Album Search -->
+          <!-- Song / Artist / Album Search (directly under YouTube link) -->
           <form id="artSearchForm" class="search-row">
-            <input id="artQueryInput" type="text" placeholder="Search song, artist, or album on Last.fm..." aria-label="Search song, artist, or album" />
+            <input id="artQueryInput" type="text" placeholder="Search song, artist, or album on iTunes..." aria-label="Search song, artist, or album" />
             <button id="artSearchBtn" type="submit" class="primary">Search</button>
           </form>
+
+          <!-- Source Switcher: iTunes default & leftmost, followed by MusicBrainz and All -->
+          <div class="source-switcher">
+            <div class="source-pills" role="tablist" aria-label="Artwork Search Source">
+              <button type="button" class="source-pill active" data-source="itunes">iTunes</button>
+              <button type="button" class="source-pill" data-source="musicbrainz">MusicBrainz</button>
+              <button type="button" class="source-pill" data-source="all">All Sources</button>
+            </div>
+            <a id="openMusicBrainzWebBtn" href="https://musicbrainz.org/search?type=release" target="_blank" rel="noopener noreferrer" class="sm" style="display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);font-size:0.8rem;font-weight:500;">
+              MusicBrainz Web ↗
+            </a>
+          </div>
 
           <!-- Toggles -->
           <div class="toggles-row">
@@ -994,7 +968,7 @@
           </div>
 
           <div class="status-line">
-            <span id="artStatusText">Enter a query or paste a YouTube link to search Last.fm cover art.</span>
+            <span id="artStatusText">Enter a query or paste a YouTube link to search iTunes cover art.</span>
           </div>
 
           <div id="artResultsGrid" class="art-grid" aria-live="polite"></div>
@@ -2101,7 +2075,7 @@
           return;
         }
         artQueryInput.value = q;
-        updateLastfmWebLink(q);
+        updateMusicBrainzWebLink(q);
         searchCoverArt(q);
         if (window.innerWidth <= 720) {
           document.body.setAttribute('data-mobile-tab', 'art');
@@ -2275,7 +2249,7 @@
           const fallbackQuery = queryParts || cleanTrackNoise(activeRec.file.name.replace(/\.mp3$/i, '').replace(/_/g, ' '));
           if (fallbackQuery) {
             artQueryInput.value = fallbackQuery;
-            updateLastfmWebLink(fallbackQuery);
+            updateMusicBrainzWebLink(fallbackQuery);
             searchCoverArt(fallbackQuery);
           }
         }
@@ -2456,11 +2430,8 @@
       });
 
       // =========================================================================
-      // 11. ALBUM ART AND TAGS FINDER (LAST.FM + ITUNES/DEEZER + YT AUTO-CLEAN)
+      // 11. ALBUM ART AND TAGS FINDER (ITUNES + MUSICBRAINZ + YT AUTO-CLEAN)
       // =========================================================================
-      const LASTFM_KEY_STORAGE = 'yt_mp3_editor_lastfm_key_v1';
-      const DEFAULT_LASTFM_KEY = '43693facbb24d1ac893a7d33846b15cc';
-
       const ytUrlInput = document.getElementById('ytUrlInput');
       const pullYtBtn = document.getElementById('pullYtBtn');
       const artSearchForm = document.getElementById('artSearchForm');
@@ -2472,62 +2443,32 @@
       const artResultsGrid = document.getElementById('artResultsGrid');
 
       const sourcePills = document.querySelectorAll('.source-pill');
-      const toggleLastfmKeyBtn = document.getElementById('toggleLastfmKeyBtn');
-      const lastfmKeyBar = document.getElementById('lastfmKeyBar');
-      const lastfmApiKeyInput = document.getElementById('lastfmApiKeyInput');
-      const saveLastfmKeyBtn = document.getElementById('saveLastfmKeyBtn');
-      const openLastfmWebBtn = document.getElementById('openLastfmWebBtn');
+      const openMusicBrainzWebBtn = document.getElementById('openMusicBrainzWebBtn');
 
-      let activeArtSource = 'lastfm';
+      let activeArtSource = 'itunes';
       let artSearchSeq = 0;
 
-      function getLastfmApiKey() {
-        const stored = (localStorage.getItem(LASTFM_KEY_STORAGE) || '').trim();
-        return stored || DEFAULT_LASTFM_KEY;
-      }
-
-      lastfmApiKeyInput.value = localStorage.getItem(LASTFM_KEY_STORAGE) || '';
-
-      toggleLastfmKeyBtn.addEventListener('click', () => {
-        lastfmKeyBar.classList.toggle('open');
-      });
-
-      saveLastfmKeyBtn.addEventListener('click', () => {
-        const val = lastfmApiKeyInput.value.trim();
-        if (val) {
-          localStorage.setItem(LASTFM_KEY_STORAGE, val);
-          showToast('Saved Last.fm API key', 'success');
-        } else {
-          localStorage.removeItem(LASTFM_KEY_STORAGE);
-          showToast('Cleared custom key (using built-in key)');
-        }
-        lastfmKeyBar.classList.remove('open');
-        if (artQueryInput.value.trim()) {
-          searchCoverArt(artQueryInput.value);
-        }
-      });
-
-      function updateLastfmWebLink(term) {
+      function updateMusicBrainzWebLink(term) {
         const q = (term || '').trim();
-        openLastfmWebBtn.href = q
-          ? `https://www.last.fm/search/albums?q=${encodeURIComponent(q)}`
-          : 'https://www.last.fm/search/albums';
+        openMusicBrainzWebBtn.href = q
+          ? `https://musicbrainz.org/search?query=${encodeURIComponent(q)}&type=release&method=indexed`
+          : 'https://musicbrainz.org/search?type=release';
       }
 
       artQueryInput.addEventListener('input', () => {
-        updateLastfmWebLink(artQueryInput.value);
+        updateMusicBrainzWebLink(artQueryInput.value);
       });
 
       sourcePills.forEach((pill) => {
         pill.addEventListener('click', () => {
           activeArtSource = pill.dataset.source;
           sourcePills.forEach((p) => p.classList.toggle('active', p === pill));
-          if (activeArtSource === 'lastfm') {
-            artQueryInput.placeholder = 'Search song, artist, or album on Last.fm...';
-          } else if (activeArtSource === 'itunes') {
-            artQueryInput.placeholder = 'Search song, artist, or album on iTunes & Deezer...';
+          if (activeArtSource === 'itunes') {
+            artQueryInput.placeholder = 'Search song, artist, or album on iTunes...';
+          } else if (activeArtSource === 'musicbrainz') {
+            artQueryInput.placeholder = 'Search song, artist, or album on MusicBrainz...';
           } else {
-            artQueryInput.placeholder = 'Search Last.fm, iTunes & Deezer...';
+            artQueryInput.placeholder = 'Search iTunes & MusicBrainz...';
           }
           if (artQueryInput.value.trim()) {
             searchCoverArt(artQueryInput.value);
@@ -2584,7 +2525,7 @@
           const rawTitle = await fetchYouTubeTitle(raw);
           const cleaned = cleanYouTubeVideoTitle(rawTitle) || rawTitle;
           artQueryInput.value = cleaned;
-          updateLastfmWebLink(cleaned);
+          updateMusicBrainzWebLink(cleaned);
 
           const rec = getCurrentRecord();
           const guessed = guessArtistAndTitleFromFilename(cleaned);
@@ -2608,12 +2549,6 @@
         if (!url) return '';
         if (url.includes('mzstatic.com')) {
           return url.replace(/\/\d+x\d+bb\.(jpg|png|webp)/i, '/1000x1000bb.$1');
-        }
-        if (url.includes('dzcdn.net') || url.includes('deezer.com')) {
-          return url.replace(/-\d+x\d+\.(jpg|png|webp)/i, '-1000x1000.$1');
-        }
-        if (url.includes('lastfm.freetls.fastly.net')) {
-          return url.replace(/\/i\/u\/[^/]+\//i, '/i/u/770x0/');
         }
         return url;
       }
@@ -2656,86 +2591,6 @@
         });
       }
 
-      function pickLastfmImage(images) {
-        if (!Array.isArray(images)) return { thumb: '', full: '' };
-        const bySize = {};
-        images.forEach((img) => {
-          if (img && img['#text']) {
-            bySize[img.size || ''] = img['#text'];
-          }
-        });
-        const best = bySize.mega || bySize.extralarge || bySize.large || bySize.medium || bySize[''] || '';
-        const thumb = bySize.large || bySize.extralarge || bySize.medium || best;
-        if (!best || best.includes('2a96cbd8b46e442fc41c2b86b821562f')) {
-          return { thumb: '', full: '' };
-        }
-        return {
-          thumb,
-          full: upscaleArtworkUrl(best)
-        };
-      }
-
-      async function queryLastfmCovers(term) {
-        const apiKey = getLastfmApiKey();
-        const albumSearchUrl = `https://ws.audioscrobbler.com/2.0/?method=album.search&album=${encodeURIComponent(term)}&api_key=${encodeURIComponent(apiKey)}&format=json&limit=18`;
-        const trackSearchUrl = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(term)}&api_key=${encodeURIComponent(apiKey)}&format=json&limit=12`;
-
-        const [albumData, trackData] = await Promise.all([
-          corsJsonFetch(albumSearchUrl, 6500),
-          corsJsonFetch(trackSearchUrl, 6500)
-        ]);
-
-        if ((albumData && albumData.error === 10) || (trackData && trackData.error === 10)) {
-          lastfmKeyBar.classList.add('open');
-          showToast('Last.fm API key rejected — enter a valid key above', 'warning', 4500);
-          return [];
-        }
-
-        const results = [];
-
-        const albums = albumData && albumData.results && albumData.results.albummatches && albumData.results.albummatches.album;
-        if (Array.isArray(albums)) {
-          albums.forEach((a, idx) => {
-            const imgs = pickLastfmImage(a.image);
-            if (!imgs.full) return;
-            results.push({
-              id: `lfm_alb_${idx}_${Math.random()}`,
-              source: 'Last.fm',
-              title: a.name || term,
-              artist: a.artist || '',
-              album: a.name || '',
-              year: '',
-              genre: '',
-              thumbUrl: imgs.thumb,
-              fullUrl: imgs.full,
-              resLabel: 'Last.fm'
-            });
-          });
-        }
-
-        const tracks = trackData && trackData.results && trackData.results.trackmatches && trackData.results.trackmatches.track;
-        if (Array.isArray(tracks)) {
-          tracks.forEach((t, idx) => {
-            const imgs = pickLastfmImage(t.image);
-            if (!imgs.full) return;
-            results.push({
-              id: `lfm_trk_${idx}_${Math.random()}`,
-              source: 'Last.fm',
-              title: t.name || term,
-              artist: t.artist || '',
-              album: t.name || '',
-              year: '',
-              genre: '',
-              thumbUrl: imgs.thumb,
-              fullUrl: imgs.full,
-              resLabel: 'Last.fm'
-            });
-          });
-        }
-
-        return results;
-      }
-
       async function queryItunesCovers(term) {
         const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=18`;
         const data = (await corsJsonFetch(url, 6000)) || (await jsonpFetch(url, 6000));
@@ -2759,27 +2614,72 @@
           });
       }
 
-      async function queryDeezerCovers(term) {
-        const url = `https://api.deezer.com/search?q=${encodeURIComponent(term)}&limit=15`;
-        const data = await jsonpFetch(url, 6000);
-        if (!data || !Array.isArray(data.data)) return [];
-        return data.data
-          .filter((r) => r.album && (r.album.cover_big || r.album.cover_medium || r.album.cover))
-          .map((r) => {
-            const baseCover = r.album.cover_xl || r.album.cover_big || r.album.cover_medium || r.album.cover;
-            return {
-              id: `dz_${r.id || Math.random()}`,
-              source: 'Deezer',
-              title: r.title || (r.album && r.album.title) || term,
-              artist: (r.artist && r.artist.name) || '',
-              album: (r.album && r.album.title) || '',
-              year: '',
-              genre: '',
-              thumbUrl: r.album.cover_medium || baseCover,
-              fullUrl: upscaleArtworkUrl(baseCover),
-              resLabel: '1000×1000'
-            };
+      function formatArtistCredit(credits) {
+        if (!Array.isArray(credits) || !credits.length) return '';
+        return credits
+          .map((c) => `${c.name || (c.artist && c.artist.name) || ''}${c.joinphrase || ''}`)
+          .join('')
+          .trim();
+      }
+
+      async function queryMusicBrainzCovers(term) {
+        const recUrl = `https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(term)}&fmt=json&limit=15`;
+        const relUrl = `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(term)}&fmt=json&limit=12`;
+
+        const [recData, relData] = await Promise.all([
+          corsJsonFetch(recUrl, 7000),
+          corsJsonFetch(relUrl, 7000)
+        ]);
+
+        const items = [];
+        const seenReleaseIds = new Set();
+
+        const recordings = recData && Array.isArray(recData.recordings) ? recData.recordings : [];
+        recordings.forEach((rec) => {
+          const trackTitle = rec.title || term;
+          const artistName = formatArtistCredit(rec['artist-credit']);
+          const firstTag = Array.isArray(rec.tags) && rec.tags[0] && rec.tags[0].name
+            ? toTitleCase(rec.tags[0].name)
+            : '';
+          const releases = Array.isArray(rec.releases) ? rec.releases : [];
+          releases.slice(0, 2).forEach((rel) => {
+            if (!rel.id || seenReleaseIds.has(rel.id)) return;
+            seenReleaseIds.add(rel.id);
+            items.push({
+              id: `mb_rec_${rel.id}`,
+              source: 'MusicBrainz',
+              title: trackTitle,
+              artist: artistName || formatArtistCredit(rel['artist-credit']),
+              album: rel.title || trackTitle,
+              year: rel.date ? String(rel.date).slice(0, 4) : '',
+              genre: firstTag,
+              thumbUrl: `https://coverartarchive.org/release/${rel.id}/front-250`,
+              fullUrl: `https://coverartarchive.org/release/${rel.id}/front-500`,
+              resLabel: 'CAA'
+            });
           });
+        });
+
+        const releases = relData && Array.isArray(relData.releases) ? relData.releases : [];
+        releases.forEach((rel) => {
+          if (!rel.id || seenReleaseIds.has(rel.id)) return;
+          seenReleaseIds.add(rel.id);
+          const artistName = formatArtistCredit(rel['artist-credit']);
+          items.push({
+            id: `mb_rel_${rel.id}`,
+            source: 'MusicBrainz',
+            title: rel.title || term,
+            artist: artistName,
+            album: rel.title || term,
+            year: rel.date ? String(rel.date).slice(0, 4) : '',
+            genre: '',
+            thumbUrl: `https://coverartarchive.org/release/${rel.id}/front-250`,
+            fullUrl: `https://coverartarchive.org/release/${rel.id}/front-500`,
+            resLabel: 'CAA'
+          });
+        });
+
+        return items;
       }
 
       function renderArtCards(items, seq) {
@@ -2793,8 +2693,12 @@
         artCountBadge.textContent = `${items.length} covers`;
         artStatusText.textContent = 'Click any cover to apply artwork & track info.';
 
+        let visibleCount = 0;
+
         items.forEach((item) => {
           if (seq !== artSearchSeq) return;
+          visibleCount += 1;
+
           const card = document.createElement('button');
           card.type = 'button';
           card.className = 'art-card';
@@ -2843,6 +2747,11 @@
               settled = true;
               clearTimeout(loadTimer);
               card.remove();
+              visibleCount = Math.max(0, visibleCount - 1);
+              artCountBadge.textContent = `${visibleCount} covers`;
+              if (visibleCount === 0) {
+                artStatusText.textContent = 'No cover images available for those matches. Try another source or search query.';
+              }
             }
           };
 
@@ -2938,45 +2847,20 @@
         return createEmptyCover();
       }
 
-      async function enrichLastfmMetadataIfNeeded(item) {
-        if (item.source !== 'Last.fm' || !item.artist || !item.album) return item;
-        try {
-          const apiKey = getLastfmApiKey();
-          const infoUrl = `https://ws.audioscrobbler.com/2.0/?method=album.getinfo&artist=${encodeURIComponent(item.artist)}&album=${encodeURIComponent(item.album)}&api_key=${encodeURIComponent(apiKey)}&format=json`;
-          const info = await corsJsonFetch(infoUrl, 3500);
-          if (info && info.album) {
-            const topTag = info.album.tags && Array.isArray(info.album.tags.tag) && info.album.tags.tag[0] && info.album.tags.tag[0].name;
-            if (topTag && !item.genre) item.genre = toTitleCase(topTag);
-            const wikiDate = info.album.wiki && info.album.wiki.published;
-            if (wikiDate && !item.year) {
-              const yrMatch = String(wikiDate).match(/\b(19|20)\d{2}\b/);
-              if (yrMatch) item.year = yrMatch[0];
-            }
-          }
-        } catch (_) {}
-        return item;
-      }
-
       async function applyCoverResult(item) {
         const rec = getCurrentRecord();
-        if (item.title && item.source !== 'Last.fm') {
-          rec.tags.title = item.title;
-        } else if (item.title && !rec.tags.title) {
-          rec.tags.title = item.title;
-        }
+        if (item.title) rec.tags.title = item.title;
         if (item.artist) rec.tags.artist = item.artist;
         if (item.album) rec.tags.album = item.album;
         if (!rec.tags.albumArtist && item.artist) rec.tags.albumArtist = item.artist;
 
-        showToast('Applying cover art & metadata...', 'info', 1800);
-
         if (autoFillMetaToggle.checked) {
-          await enrichLastfmMetadataIfNeeded(item);
           if (!rec.tags.year && item.year) rec.tags.year = item.year;
           if (!rec.tags.genre && item.genre) rec.tags.genre = item.genre;
         }
 
         rec.filenameTouched = false;
+        showToast('Applying cover art & metadata...', 'info', 1800);
 
         const coverObj = await fetchImageAsCover(item.fullUrl, item.thumbUrl, item.album || item.title);
         if (coverObj && coverObj.dataUrl) {
@@ -3001,32 +2885,27 @@
         }
 
         const seq = ++artSearchSeq;
-        const sourceLabel = activeArtSource === 'lastfm'
-          ? 'Last.fm'
-          : activeArtSource === 'itunes'
-            ? 'iTunes & Deezer'
-            : 'Last.fm, iTunes & Deezer';
+        const sourceLabel = activeArtSource === 'itunes'
+          ? 'iTunes'
+          : activeArtSource === 'musicbrainz'
+            ? 'MusicBrainz'
+            : 'iTunes & MusicBrainz';
 
         artStatusText.textContent = `Searching ${sourceLabel} for "${query}"...`;
         artCountBadge.textContent = 'Searching...';
         artResultsGrid.innerHTML = '';
 
         let combined = [];
-        if (activeArtSource === 'lastfm') {
-          combined = await queryLastfmCovers(query);
-        } else if (activeArtSource === 'itunes') {
-          const [itResults, dzResults] = await Promise.all([
-            queryItunesCovers(query),
-            queryDeezerCovers(query)
-          ]);
-          combined = [...itResults, ...dzResults];
+        if (activeArtSource === 'itunes') {
+          combined = await queryItunesCovers(query);
+        } else if (activeArtSource === 'musicbrainz') {
+          combined = await queryMusicBrainzCovers(query);
         } else {
-          const [lfmResults, itResults, dzResults] = await Promise.all([
-            queryLastfmCovers(query),
+          const [itResults, mbResults] = await Promise.all([
             queryItunesCovers(query),
-            queryDeezerCovers(query)
+            queryMusicBrainzCovers(query)
           ]);
-          combined = [...lfmResults, ...itResults, ...dzResults];
+          combined = [...itResults, ...mbResults];
         }
 
         if (seq !== artSearchSeq) return;
