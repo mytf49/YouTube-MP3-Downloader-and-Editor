@@ -144,7 +144,6 @@
       gap: 24px;
     }
 
-    /* Removed content-visibility: auto to prevent iOS Safari mobile rendering stalls */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -955,12 +954,12 @@
           <p class="section-sub">Search iTunes for verified 1000×1000 covers or extract a clean title from a YouTube URL. Click a card to apply.</p>
         </div>
 
-        <form id="searchForm" class="search-row">
+        <form id="searchForm" class="search-row" action="javascript:void(0)" novalidate>
           <div>
             <label for="searchInput">Search Query <span class="field-hint">(Artist, Song, or Album)</span></label>
             <input id="searchInput" type="text" placeholder="e.g. Time for the Moon Night GFRIEND" autocomplete="off" />
           </div>
-          <button id="searchBtn" class="btn btn-primary" type="submit">Find 1000×1000 Art</button>
+          <button id="searchBtn" class="btn btn-primary" type="button">Find 1000×1000 Art</button>
         </form>
 
         <div class="yt-block">
@@ -977,7 +976,7 @@
         <div class="autofill-row">
           <label class="toggle-check" for="autofillExtrasToggle">
             <input id="autofillExtrasToggle" type="checkbox" />
-            <span>Also fill blank Year & Genre when selecting a card</span>
+            <span>Also fill blank Year &amp; Genre when selecting a card</span>
           </label>
           <label class="toggle-check" for="hideNoisyToggle">
             <input id="hideNoisyToggle" type="checkbox" />
@@ -1005,7 +1004,7 @@
             <div class="cover-preview-box" id="mp3IconBox">MP3</div>
             <div class="dz-copy">
               <div class="dz-title" id="mp3DropTitle">Drop MP3(s) here or click to browse</div>
-              <div class="dz-sub" id="mp3DropSub">Reads existing tags & guesses Song Name / Artist from filename</div>
+              <div class="dz-sub" id="mp3DropSub">Reads existing tags &amp; guesses Song Name / Artist from filename</div>
             </div>
           </div>
 
@@ -1135,7 +1134,7 @@
 
           <div class="editor-footer">
             <div id="editorStatus" class="status-bar" style="margin-top: 0; flex: 1; min-width: 220px;" role="status" aria-live="polite"></div>
-            <button id="saveMp3Btn" class="btn btn-primary" type="submit">Write Tags & Download MP3</button>
+            <button id="saveMp3Btn" class="btn btn-primary" type="submit">Write Tags &amp; Download MP3</button>
           </div>
           <div class="shortcut-note">Tip: Press Ctrl/Cmd + Enter to export, or Esc to clear status messages.</div>
         </form>
@@ -1707,8 +1706,6 @@
       return url.replace(/\/\d+x\d+bb(?=[.-])/i, "/1000x1000bb");
     }
 
-    // Removed img.crossOrigin for dimension check so iOS Safari doesn't block cached/CDN images;
-    // selectArtworkCard still fetches raw bytes when a card is clicked. Increased timeout for mobile.
     function verifyExact1000x1000(url, signal) {
       return new Promise((resolve) => {
         if (signal?.aborted) {
@@ -1919,7 +1916,6 @@
         }
         card.setAttribute("aria-pressed", isSelected ? "true" : "false");
 
-        // Eager loading ensures iOS Safari mobile viewports paint thumbnails immediately
         card.innerHTML = `
           <div class="result-thumb-wrap">
             <img src="${escapeAttr(item.url)}" alt="${escapeAttr(item.title)} by ${escapeAttr(item.artist)}" decoding="async" />
@@ -1991,9 +1987,24 @@
       }
     }
 
+    // Prevent native form navigation/reload on Enter or button click
     searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       performArtworkSearch(searchInput.value);
+    });
+
+    searchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      performArtworkSearch(searchInput.value);
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        performArtworkSearch(searchInput.value);
+      }
     });
 
     // --- Cover Preview & Custom Upload ---
@@ -2367,14 +2378,14 @@
     // --- Helpers ---
     function escapeHtml(str) {
       return String(str)
-        .replace(/&/g, "&")
-        .replace(/</g, "<")
-        .replace(/>/g, ">")
-        .replace(/"/g, """);
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     function escapeAttr(str) {
-      return escapeHtml(str).replace(/'/g, "'");
+      return escapeHtml(str).replace(/'/g, "&#39;");
     }
   </script>
 </body>
