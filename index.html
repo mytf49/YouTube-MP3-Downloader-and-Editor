@@ -298,6 +298,13 @@
       text-overflow: ellipsis;
     }
 
+    .card-subwarn {
+      font-size: 0.76rem;
+      color: var(--warning);
+      padding-left: 34px;
+      line-height: 1.35;
+    }
+
     .step-circle {
       width: 24px;
       height: 24px;
@@ -362,44 +369,6 @@
       display: flex;
       gap: 8px;
       margin-bottom: 10px;
-    }
-
-    .source-switcher {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .source-pills {
-      display: inline-flex;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 3px;
-      gap: 3px;
-    }
-
-    .source-pill {
-      border: 0;
-      background: transparent;
-      padding: 5px 10px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border-radius: 6px;
-      color: var(--text-muted);
-    }
-
-    .source-pill:hover:not(:disabled) {
-      background: var(--surface-3);
-      color: var(--text);
-    }
-
-    .source-pill.active {
-      background: var(--accent);
-      color: #ffffff;
     }
 
     .toggles-row {
@@ -865,7 +834,7 @@
     }
   </style>
 </head>
-<body data-mobile-tab="editor">
+<body data-mobile-tab="converter">
   <header class="app-header">
     <div class="header-inner">
       <div class="brand">
@@ -880,9 +849,9 @@
       </div>
     </div>
     <nav class="mobile-tabs" aria-label="Sections">
-      <button type="button" class="mobile-tab-btn" data-tab="converter">1. Downloader</button>
+      <button type="button" class="mobile-tab-btn active" data-tab="converter">1. Downloader</button>
       <button type="button" class="mobile-tab-btn" data-tab="art">2. Art & Tags</button>
-      <button type="button" class="mobile-tab-btn active" data-tab="editor">3. Tag Editor</button>
+      <button type="button" class="mobile-tab-btn" data-tab="editor">3. Tag Editor</button>
     </nav>
   </header>
 
@@ -922,8 +891,11 @@
       <!-- 2. Album Art and Tags Finder -->
       <section class="card" id="artCard">
         <div class="card-header">
-          <h2 class="card-title"><span class="step-circle">2</span>Album Art and Tags Finder</h2>
-          <span id="artCountBadge" style="font-size:0.76rem;color:var(--text-muted);">Ready</span>
+          <div class="card-title-group">
+            <h2 class="card-title"><span class="step-circle">2</span>Album Art and Tags Finder (iTunes)</h2>
+            <span class="card-subwarn">Tip: Enable <strong>Desktop Site</strong> in your mobile browser to load iTunes album art properly.</span>
+          </div>
+          <span id="artCountBadge" style="font-size:0.76rem;color:var(--text-muted);flex-shrink:0;">Ready</span>
         </div>
         <div class="card-body">
           <!-- YouTube Link Auto-Clean Puller -->
@@ -942,18 +914,6 @@
             <input id="artQueryInput" type="text" placeholder="Search song, artist, or album on iTunes..." aria-label="Search song, artist, or album" />
             <button id="artSearchBtn" type="submit" class="primary">Search</button>
           </form>
-
-          <!-- Source Switcher: iTunes default & leftmost, followed by MusicBrainz and All -->
-          <div class="source-switcher">
-            <div class="source-pills" role="tablist" aria-label="Artwork Search Source">
-              <button type="button" class="source-pill active" data-source="itunes">iTunes</button>
-              <button type="button" class="source-pill" data-source="musicbrainz">MusicBrainz</button>
-              <button type="button" class="source-pill" data-source="all">All Sources</button>
-            </div>
-            <a id="openMusicBrainzWebBtn" href="https://musicbrainz.org/search?type=release" target="_blank" rel="noopener noreferrer" class="sm" style="display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);font-size:0.8rem;font-weight:500;">
-              MusicBrainz Web ↗
-            </a>
-          </div>
 
           <!-- Toggles -->
           <div class="toggles-row">
@@ -2075,7 +2035,6 @@
           return;
         }
         artQueryInput.value = q;
-        updateMusicBrainzWebLink(q);
         searchCoverArt(q);
         if (window.innerWidth <= 720) {
           document.body.setAttribute('data-mobile-tab', 'art');
@@ -2249,7 +2208,6 @@
           const fallbackQuery = queryParts || cleanTrackNoise(activeRec.file.name.replace(/\.mp3$/i, '').replace(/_/g, ' '));
           if (fallbackQuery) {
             artQueryInput.value = fallbackQuery;
-            updateMusicBrainzWebLink(fallbackQuery);
             searchCoverArt(fallbackQuery);
           }
         }
@@ -2430,7 +2388,7 @@
       });
 
       // =========================================================================
-      // 11. ALBUM ART AND TAGS FINDER (ITUNES + MUSICBRAINZ + YT AUTO-CLEAN)
+      // 11. ALBUM ART AND TAGS FINDER (ITUNES + YT AUTO-CLEAN)
       // =========================================================================
       const ytUrlInput = document.getElementById('ytUrlInput');
       const pullYtBtn = document.getElementById('pullYtBtn');
@@ -2442,39 +2400,7 @@
       const artCountBadge = document.getElementById('artCountBadge');
       const artResultsGrid = document.getElementById('artResultsGrid');
 
-      const sourcePills = document.querySelectorAll('.source-pill');
-      const openMusicBrainzWebBtn = document.getElementById('openMusicBrainzWebBtn');
-
-      let activeArtSource = 'itunes';
       let artSearchSeq = 0;
-
-      function updateMusicBrainzWebLink(term) {
-        const q = (term || '').trim();
-        openMusicBrainzWebBtn.href = q
-          ? `https://musicbrainz.org/search?query=${encodeURIComponent(q)}&type=release&method=indexed`
-          : 'https://musicbrainz.org/search?type=release';
-      }
-
-      artQueryInput.addEventListener('input', () => {
-        updateMusicBrainzWebLink(artQueryInput.value);
-      });
-
-      sourcePills.forEach((pill) => {
-        pill.addEventListener('click', () => {
-          activeArtSource = pill.dataset.source;
-          sourcePills.forEach((p) => p.classList.toggle('active', p === pill));
-          if (activeArtSource === 'itunes') {
-            artQueryInput.placeholder = 'Search song, artist, or album on iTunes...';
-          } else if (activeArtSource === 'musicbrainz') {
-            artQueryInput.placeholder = 'Search song, artist, or album on MusicBrainz...';
-          } else {
-            artQueryInput.placeholder = 'Search iTunes & MusicBrainz...';
-          }
-          if (artQueryInput.value.trim()) {
-            searchCoverArt(artQueryInput.value);
-          }
-        });
-      });
 
       function extractYouTubeTitleFromUrl(urlStr) {
         const trimmed = (urlStr || '').trim();
@@ -2525,7 +2451,6 @@
           const rawTitle = await fetchYouTubeTitle(raw);
           const cleaned = cleanYouTubeVideoTitle(rawTitle) || rawTitle;
           artQueryInput.value = cleaned;
-          updateMusicBrainzWebLink(cleaned);
 
           const rec = getCurrentRecord();
           const guessed = guessArtistAndTitleFromFilename(cleaned);
@@ -2614,79 +2539,11 @@
           });
       }
 
-      function formatArtistCredit(credits) {
-        if (!Array.isArray(credits) || !credits.length) return '';
-        return credits
-          .map((c) => `${c.name || (c.artist && c.artist.name) || ''}${c.joinphrase || ''}`)
-          .join('')
-          .trim();
-      }
-
-      async function queryMusicBrainzCovers(term) {
-        const recUrl = `https://musicbrainz.org/ws/2/recording/?query=${encodeURIComponent(term)}&fmt=json&limit=15`;
-        const relUrl = `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(term)}&fmt=json&limit=12`;
-
-        const [recData, relData] = await Promise.all([
-          corsJsonFetch(recUrl, 7000),
-          corsJsonFetch(relUrl, 7000)
-        ]);
-
-        const items = [];
-        const seenReleaseIds = new Set();
-
-        const recordings = recData && Array.isArray(recData.recordings) ? recData.recordings : [];
-        recordings.forEach((rec) => {
-          const trackTitle = rec.title || term;
-          const artistName = formatArtistCredit(rec['artist-credit']);
-          const firstTag = Array.isArray(rec.tags) && rec.tags[0] && rec.tags[0].name
-            ? toTitleCase(rec.tags[0].name)
-            : '';
-          const releases = Array.isArray(rec.releases) ? rec.releases : [];
-          releases.slice(0, 2).forEach((rel) => {
-            if (!rel.id || seenReleaseIds.has(rel.id)) return;
-            seenReleaseIds.add(rel.id);
-            items.push({
-              id: `mb_rec_${rel.id}`,
-              source: 'MusicBrainz',
-              title: trackTitle,
-              artist: artistName || formatArtistCredit(rel['artist-credit']),
-              album: rel.title || trackTitle,
-              year: rel.date ? String(rel.date).slice(0, 4) : '',
-              genre: firstTag,
-              thumbUrl: `https://coverartarchive.org/release/${rel.id}/front-250`,
-              fullUrl: `https://coverartarchive.org/release/${rel.id}/front-500`,
-              resLabel: 'CAA'
-            });
-          });
-        });
-
-        const releases = relData && Array.isArray(relData.releases) ? relData.releases : [];
-        releases.forEach((rel) => {
-          if (!rel.id || seenReleaseIds.has(rel.id)) return;
-          seenReleaseIds.add(rel.id);
-          const artistName = formatArtistCredit(rel['artist-credit']);
-          items.push({
-            id: `mb_rel_${rel.id}`,
-            source: 'MusicBrainz',
-            title: rel.title || term,
-            artist: artistName,
-            album: rel.title || term,
-            year: rel.date ? String(rel.date).slice(0, 4) : '',
-            genre: '',
-            thumbUrl: `https://coverartarchive.org/release/${rel.id}/front-250`,
-            fullUrl: `https://coverartarchive.org/release/${rel.id}/front-500`,
-            resLabel: 'CAA'
-          });
-        });
-
-        return items;
-      }
-
       function renderArtCards(items, seq) {
         artResultsGrid.innerHTML = '';
         if (!items.length) {
           artCountBadge.textContent = '0 found';
-          artStatusText.textContent = 'No matching cover art found. Try switching source pills above or unchecking "Hide noisy / alt releases".';
+          artStatusText.textContent = 'No matching cover art found. Try another search or uncheck "Hide noisy / alt releases".';
           return;
         }
 
@@ -2750,7 +2607,7 @@
               visibleCount = Math.max(0, visibleCount - 1);
               artCountBadge.textContent = `${visibleCount} covers`;
               if (visibleCount === 0) {
-                artStatusText.textContent = 'No cover images available for those matches. Try another source or search query.';
+                artStatusText.textContent = 'No cover images available for those matches. Try enabling Desktop Site or another search query.';
               }
             }
           };
@@ -2885,28 +2742,11 @@
         }
 
         const seq = ++artSearchSeq;
-        const sourceLabel = activeArtSource === 'itunes'
-          ? 'iTunes'
-          : activeArtSource === 'musicbrainz'
-            ? 'MusicBrainz'
-            : 'iTunes & MusicBrainz';
-
-        artStatusText.textContent = `Searching ${sourceLabel} for "${query}"...`;
+        artStatusText.textContent = `Searching iTunes for "${query}"...`;
         artCountBadge.textContent = 'Searching...';
         artResultsGrid.innerHTML = '';
 
-        let combined = [];
-        if (activeArtSource === 'itunes') {
-          combined = await queryItunesCovers(query);
-        } else if (activeArtSource === 'musicbrainz') {
-          combined = await queryMusicBrainzCovers(query);
-        } else {
-          const [itResults, mbResults] = await Promise.all([
-            queryItunesCovers(query),
-            queryMusicBrainzCovers(query)
-          ]);
-          combined = [...itResults, ...mbResults];
-        }
+        let combined = await queryItunesCovers(query);
 
         if (seq !== artSearchSeq) return;
 
@@ -2916,7 +2756,7 @@
 
         const seen = new Set();
         const deduped = combined.filter((item) => {
-          const key = `${item.source}|${(item.artist || '').toLowerCase()}|${(item.album || item.title || '').toLowerCase()}`;
+          const key = `${(item.artist || '').toLowerCase()}|${(item.album || item.title || '').toLowerCase()}`;
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
