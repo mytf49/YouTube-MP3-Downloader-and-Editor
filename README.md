@@ -1,20 +1,24 @@
 # YouTube MP3 Downloader and Editor
 
-Convert YouTube tracks to MP3, find verified 1000×1000 album artwork, and edit ID3 metadata tags locally in your browser.
+Download YouTube MP3s, search iTunes cover art and track tags, and edit MP3 ID3 metadata and embedded artwork directly in your browser.
+
+## Live Demo
+
+Open the app here: **[https://mytf49.github.io/YouTube-MP3-Downloader-and-Editor/](https://mytf49.github.io/YouTube-MP3-Downloader-and-Editor/)**
 
 ## Features
 
-- **YouTube MP3 Downloader Frame:** Access `ytmp3s.pl` directly inside a compact embedded frame to convert tracks before loading them into the editor.
-- **1000×1000 Album Artwork Finder:** Search iTunes for verified `1000×1000` covers, extract and clean video titles from YouTube URLs via oEmbed, filter out `Alt/Noisy` releases, and optionally fill blank `Year` and `Genre` fields.
-- **MP3 ID3 Tag Editor:** Read existing ID3v2.x / ID3v1 tags (or guess `Song Name` and `Artist` from messy filenames), preview audio, and edit `TIT2`, `TPE1`, `TALB`, `TPE2`, `TRCK`, `TPOS`, `TYER`, `TCON`, `TCOM`, `TBPM`, `COMM`, `USLT`, and `APIC` cover art.
-- **Queue & Helpers:** Load multiple MP3 files into a switchable queue, apply shared album/artist/year/genre/cover values across queued tracks, format text fields in Title Case, and download standalone cover images.
-- **Custom Export Filename & Shortcuts:** Default exported `.mp3` filenames to the song name (or enter a custom filename), use `Ctrl/Cmd + Enter` to export, press `Esc` to clear status messages, and toggle between light and dark themes.
+- **YouTube MP3 Downloader:** Convert and download MP3s via the embedded converter frame or open it in a separate tab if framing is blocked.
+- **iTunes Cover Art & Metadata Finder:** Search by song, artist, or album—or paste a YouTube link to auto-clean noisy titles—with filters for alternate releases, optional blank year/genre auto-fill, and a tip to enable **Desktop Site** on mobile browsers for iTunes artwork loading.
+- **MP3 ID3 Tag & Cover Editor:** Edit Song Title, Artist, Album, Album Artist, Track Number, Disc Number, Year, Genre, Composer, BPM, Comment, and Lyrics (`USLT`), plus upload, drag-and-drop, save, or clear cover art (with an optional `1000×1000` cap).
+- **Multi-Track Queue & Batch Tools:** Load multiple MP3s via drag-and-drop or file picker, reorder tracks, auto-number tracks (`1/N`), apply shared album/artist/year/genre and cover art across the queue, and export single or all tracks with `Ctrl/Cmd + Enter`.
+- **Audio Preview, Quick Formatting & Light/Dark Theme:** Preview loaded MP3s with a built-in player, guess artist and title from filenames, format fields in Title Case, revert original tags, and toggle between light and dark mode.
 
 ## How to Run Locally
 
 1. Download or clone this repository.
-2. Open the HTML file in any modern web browser.
+2. Open `index.html` in any web browser.
 
 ## Privacy & Data
 
-All MP3 decoding, ID3 tag reading/writing, and theme preferences run locally in your browser — your audio files and tags are not uploaded to a server for editing. Artwork searches and YouTube title lookups make requests directly to iTunes and YouTube oEmbed from your browser.
+Your MP3 files, tag edits, cover art, and theme preference are processed locally in your browser on your device — your audio files and tag edits are not uploaded to a server for tagging. Save or export your updated MP3s before closing or clearing browser data.
