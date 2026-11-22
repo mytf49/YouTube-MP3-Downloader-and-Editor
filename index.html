@@ -49,7 +49,7 @@
       --shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
     }
 
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -798,6 +798,30 @@
     }
 
     @media (max-width: 720px) {
+      .header-inner {
+        padding: 10px 14px;
+        gap: 8px;
+      }
+      .brand {
+        gap: 8px;
+      }
+      .brand-logo {
+        width: 32px;
+        height: 32px;
+        font-size: 0.92rem;
+        border-radius: 8px;
+      }
+      .brand-title {
+        font-size: 0.9rem;
+        line-height: 1.22;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+      #themeToggleBtn {
+        padding: 6px 9px;
+        font-size: 0.78rem;
+      }
       .mobile-tabs {
         display: flex;
       }
@@ -2197,7 +2221,6 @@
         loadRecordIntoForm();
         renderQueueUI();
 
-        // Sync Section 2 fields & auto-search art UNLESS user has pasted a YouTube link
         const hasYtLink = !!(ytUrlInput && ytUrlInput.value.trim());
         const activeRec = state.queue[state.activeIndex];
         if (!hasYtLink && activeRec) {
