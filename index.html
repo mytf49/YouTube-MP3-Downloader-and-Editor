@@ -58,7 +58,6 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.45;
-      transition: background-color 0.2s ease, color 0.2s ease;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -116,6 +115,12 @@
       color: #ffffff;
     }
 
+    button.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #ffffff;
+    }
+
     button.danger-ghost {
       color: var(--danger);
       border-color: transparent;
@@ -133,12 +138,15 @@
       border-radius: 7px;
     }
 
+    button.full {
+      width: 100%;
+    }
+
     input[type="text"],
     input[type="number"],
     input[type="url"],
     select,
     textarea {
-      width: 100%;
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -146,6 +154,17 @@
       font-size: 0.9rem;
       outline: none;
       transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="url"],
+    .field select,
+    .field textarea,
+    .search-row input,
+    .yt-pull-row input,
+    .filename-input-group input {
+      width: 100%;
     }
 
     input:focus, select:focus, textarea:focus {
@@ -214,6 +233,17 @@
       align-items: center;
       gap: 10px;
       flex-shrink: 0;
+    }
+
+    .theme-label-swap {
+      display: inline-grid;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .theme-label-swap > span {
+      grid-area: 1 / 1;
+      white-space: nowrap;
     }
 
     /* Main Container & Mobile Nav */
@@ -868,7 +898,7 @@
       <div class="header-actions">
         <button id="themeToggleBtn" type="button" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
           <span id="themeIcon">🌙</span>
-          <span id="themeLabel">Dark</span>
+          <span class="theme-label-swap"><span id="themeLabel">Dark</span></span>
         </button>
       </div>
     </div>
