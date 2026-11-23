@@ -49,7 +49,9 @@
       --shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
 
     html, body {
       margin: 0;
@@ -58,11 +60,19 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.45;
+      transition: background-color 0.2s ease, color 0.2s ease;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
 
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
 
     button, input, select, textarea {
       font-family: inherit;
@@ -142,6 +152,26 @@
       width: 100%;
     }
 
+    a.sm-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface-2);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    a.sm-link:hover {
+      background: var(--surface-3);
+      border-color: var(--text-muted);
+      text-decoration: none;
+    }
+
     input[type="text"],
     input[type="number"],
     input[type="url"],
@@ -183,6 +213,9 @@
       position: sticky;
       top: 0;
       z-index: 30;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: clip;
       backdrop-filter: blur(12px);
       background: color-mix(in srgb, var(--surface) 88%, transparent);
       border-bottom: 1px solid var(--border);
@@ -190,6 +223,7 @@
 
     .header-inner {
       max-width: 1560px;
+      width: 100%;
       margin: 0 auto;
       padding: 12px 18px;
       display: flex;
@@ -203,6 +237,7 @@
       align-items: center;
       gap: 11px;
       min-width: 0;
+      max-width: 100%;
     }
 
     .brand-logo {
@@ -233,18 +268,33 @@
       align-items: center;
       gap: 10px;
       flex-shrink: 0;
+      max-width: 100%;
     }
 
-    .theme-label-swap {
+    .header-actions > button {
+      height: 36px;
+      padding: 0 12px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    #themeToggleBtn {
       display: inline-grid;
       align-items: center;
       justify-items: center;
     }
 
-    .theme-label-swap > span {
+    .theme-label-light,
+    .theme-label-dark {
       grid-area: 1 / 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       white-space: nowrap;
     }
+
+    html[data-theme="light"] .theme-label-light { visibility: hidden; }
+    html[data-theme="dark"] .theme-label-dark { visibility: hidden; }
 
     /* Main Container & Mobile Nav */
     .mobile-tabs {
@@ -265,7 +315,7 @@
     .mobile-tab-btn.active {
       background: var(--accent);
       border-color: var(--accent);
-      color: #fff;
+      color: #ffffff;
     }
 
     .container {
@@ -292,6 +342,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
+      min-width: 0;
     }
 
     .card-header {
@@ -301,6 +352,13 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-header-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .card-title-group {
@@ -388,6 +446,14 @@
       border-radius: var(--radius-sm);
       padding: 10px;
       margin-bottom: 10px;
+    }
+
+    .yt-pull-label {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
     }
 
     .yt-pull-row {
@@ -566,6 +632,12 @@
       flex-wrap: wrap;
     }
 
+    .queue-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
     .queue-list {
       display: flex;
       gap: 7px;
@@ -592,6 +664,19 @@
       font-weight: 600;
     }
 
+    .queue-label-btn {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+      font-weight: inherit;
+    }
+
+    .queue-label-btn:hover:not(:disabled) {
+      background: transparent;
+      border-color: transparent;
+    }
+
     .queue-mini-btn {
       padding: 0 3px;
       border: 0;
@@ -604,6 +689,7 @@
     .queue-mini-btn:hover:not(:disabled) {
       color: var(--text);
       background: transparent;
+      border-color: transparent;
     }
 
     .queue-remove:hover:not(:disabled) {
@@ -641,6 +727,10 @@
       color: var(--text-muted);
     }
 
+    .player-duration {
+      font-family: var(--mono);
+    }
+
     audio {
       width: 100%;
       height: 36px;
@@ -648,6 +738,7 @@
 
     /* Editor Layout */
     .editor-top-grid {
+      margin-top: 16px;
       display: grid;
       grid-template-columns: 220px 1fr;
       gap: 18px;
@@ -693,6 +784,17 @@
       color: var(--text-muted);
     }
 
+    .cover-placeholder-icon {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    .cover-cap-toggle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
     .cover-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -713,6 +815,7 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
+      min-width: 0;
     }
 
     .field.span-2 {
@@ -785,6 +888,11 @@
       padding: 0 4px;
     }
 
+    .export-submit-btn {
+      padding: 10px 16px;
+      font-size: 0.9rem;
+    }
+
     /* Toast */
     .toast-container {
       position: fixed;
@@ -831,9 +939,12 @@
       .header-inner {
         padding: 10px 14px;
         gap: 8px;
+        flex-wrap: nowrap;
       }
       .brand {
         gap: 8px;
+        flex: 1;
+        min-width: 0;
       }
       .brand-logo {
         width: 32px;
@@ -847,9 +958,16 @@
         white-space: normal;
         overflow: visible;
         text-overflow: clip;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .header-actions {
+        width: auto;
+        flex-shrink: 0;
       }
       #themeToggleBtn {
-        padding: 6px 9px;
+        height: 32px;
+        padding: 0 9px;
         font-size: 0.78rem;
       }
       .mobile-tabs {
@@ -858,11 +976,13 @@
       .container {
         padding: 12px 14px 28px;
       }
-      body[data-mobile-tab="converter"] .right-col { display: none; }
-      body[data-mobile-tab="converter"] #artCard { display: none; }
-      body[data-mobile-tab="art"] .right-col { display: none; }
-      body[data-mobile-tab="art"] #converterCard { display: none; }
-      body[data-mobile-tab="editor"] .left-col { display: none; }
+      body[data-mobile-tab="converter"] .right-col,
+      body[data-mobile-tab="converter"] #artCard,
+      body[data-mobile-tab="art"] .right-col,
+      body[data-mobile-tab="art"] #converterCard,
+      body[data-mobile-tab="editor"] .left-col {
+        display: none;
+      }
 
       .converter-frame-wrap {
         height: 340px;
@@ -897,20 +1017,20 @@
       </div>
       <div class="header-actions">
         <button id="themeToggleBtn" type="button" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
-          <span id="themeIcon">🌙</span>
-          <span class="theme-label-swap"><span id="themeLabel">Dark</span></span>
+          <span class="theme-label-light">☀️ Light</span>
+          <span class="theme-label-dark">🌙 Dark</span>
         </button>
       </div>
     </div>
     <nav class="mobile-tabs" aria-label="Sections">
       <button type="button" class="mobile-tab-btn active" data-tab="converter">1. Downloader</button>
-      <button type="button" class="mobile-tab-btn" data-tab="art">2. Art & Tags</button>
+      <button type="button" class="mobile-tab-btn" data-tab="art">2. Art &amp; Tags</button>
       <button type="button" class="mobile-tab-btn" data-tab="editor">3. Tag Editor</button>
     </nav>
   </header>
 
   <main class="container">
-    <!-- LEFT COLUMN: Downloader + Album Art and Tags Finder (50% of wide screen) -->
+    <!-- LEFT COLUMN: Downloader + Album Art and Tags Finder -->
     <div class="left-col">
       <!-- 1. YouTube MP3 Downloader -->
       <section class="card" id="converterCard">
@@ -919,8 +1039,8 @@
             <h2 class="card-title"><span class="step-circle">1</span>YouTube MP3 Downloader</h2>
             <a href="https://ytmp3s.pl/" target="_blank" rel="noopener noreferrer" class="card-sublink">https://ytmp3s.pl/</a>
           </div>
-          <div style="display:flex;gap:6px;flex-shrink:0;">
-            <a id="openConverterTabLink" href="https://ytmp3s.pl/" target="_blank" rel="noopener noreferrer" class="sm" style="display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);font-size:0.8rem;font-weight:500;">
+          <div class="card-header-actions">
+            <a id="openConverterTabLink" href="https://ytmp3s.pl/" target="_blank" rel="noopener noreferrer" class="sm-link">
               Open Tab ↗
             </a>
             <button id="reloadConverterBtn" type="button" class="sm" title="Reload converter frame">Reload</button>
@@ -952,24 +1072,21 @@
           <span id="artCountBadge" style="font-size:0.76rem;color:var(--text-muted);flex-shrink:0;">Ready</span>
         </div>
         <div class="card-body">
-          <!-- YouTube Link Auto-Clean Puller -->
           <div class="yt-pull-box">
-            <label for="ytUrlInput" style="display:block;font-size:0.76rem;font-weight:600;color:var(--text-muted);margin-bottom:6px;">
-              Paste YouTube Link to Auto-Clean Title & Search Art
+            <label for="ytUrlInput" class="yt-pull-label">
+              Paste YouTube Link to Auto-Clean Title &amp; Search Art
             </label>
             <div class="yt-pull-row">
               <input id="ytUrlInput" type="url" placeholder="https://www.youtube.com/watch?v=... or youtu.be/..." />
-              <button id="pullYtBtn" type="button" class="sm primary">Pull & Search</button>
+              <button id="pullYtBtn" type="button" class="sm primary">Pull &amp; Search</button>
             </div>
           </div>
 
-          <!-- Song / Artist / Album Search (directly under YouTube link) -->
           <form id="artSearchForm" class="search-row">
             <input id="artQueryInput" type="text" placeholder="Search song, artist, or album on iTunes..." aria-label="Search song, artist, or album" />
             <button id="artSearchBtn" type="submit" class="primary">Search</button>
           </form>
 
-          <!-- Toggles -->
           <div class="toggles-row">
             <label class="toggle-label" title="Hide deluxe, remix, live, karaoke, commentary, or tribute releases">
               <input id="hideNoisyToggle" type="checkbox" checked />
@@ -977,7 +1094,7 @@
             </label>
             <label class="toggle-label" title="Auto-fill Year and Genre when empty upon selecting a cover">
               <input id="autoFillMetaToggle" type="checkbox" />
-              <span>Auto-fill blank Year & Genre</span>
+              <span>Auto-fill blank Year &amp; Genre</span>
             </label>
           </div>
 
@@ -990,7 +1107,7 @@
       </section>
     </div>
 
-    <!-- RIGHT COLUMN: MP3 Tag Editor (50% of wide screen) -->
+    <!-- RIGHT COLUMN: MP3 Tag Editor -->
     <div class="right-col">
       <section class="card" id="editorCard">
         <div class="card-header">
@@ -998,18 +1115,16 @@
           <span id="activeTrackIndicator" style="font-size:0.78rem;color:var(--text-muted);">No MP3 loaded (editing draft)</span>
         </div>
         <div class="card-body">
-          <!-- Drag & Drop / Browse MP3s -->
           <div id="mp3Dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drag and drop MP3 files here or click to browse">
             <input id="mp3FileInput" type="file" accept=".mp3,audio/mpeg,audio/mp3" multiple hidden />
             <div class="dropzone-title">Drop MP3 file(s) here or click to browse</div>
-            <div class="dropzone-sub">Reads ID3v1 / ID3v2 tags & embedded art • Supports multi-track queue, reordering & batch updates</div>
+            <div class="dropzone-sub">Reads ID3v1 / ID3v2 tags &amp; embedded art • Supports multi-track queue, reordering &amp; batch updates</div>
           </div>
 
-          <!-- Queue & Batch Apply -->
           <div id="queueSection" class="queue-bar" style="display:none;">
             <div class="queue-header">
               <strong style="font-size:0.84rem;">Queue (<span id="queueCount">0</span> tracks)</strong>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <div class="queue-actions">
                 <button id="autoNumberQueueBtn" type="button" class="sm" title="Set 1/N, 2/N track numbers for queued tracks">Auto-Number</button>
                 <button id="exportAllQueueBtn" type="button" class="sm" title="Export and download all queued MP3s">Export All</button>
                 <button id="addMoreMp3Btn" type="button" class="sm">+ Add MP3s</button>
@@ -1041,24 +1156,21 @@
             </div>
           </div>
 
-          <!-- Built-in Audio Player -->
           <div class="player-box">
             <div class="player-meta">
               <span id="playerTrackTitle">Audio Preview — Load an MP3 to listen</span>
-              <span id="playerDuration" style="font-family:var(--mono);">0:00</span>
+              <span id="playerDuration" class="player-duration">0:00</span>
             </div>
             <audio id="audioPlayer" controls preload="metadata"></audio>
           </div>
 
-          <!-- Editor: Cover + Metadata Fields -->
-          <div class="editor-top-grid" style="margin-top:16px;">
-            <!-- Cover Art Box -->
+          <div class="editor-top-grid">
             <div class="cover-panel">
               <div id="coverDropzone" class="cover-preview-box" tabindex="0" role="button" aria-label="Drop cover art image here or click to upload">
                 <input id="coverFileInput" type="file" accept="image/jpeg,image/png,image/webp,image/*" hidden />
                 <img id="coverPreviewImg" alt="Cover art preview" style="display:none;" />
                 <div id="coverPlaceholder" class="cover-placeholder">
-                  <div style="font-size:1.4rem;margin-bottom:4px;">🖼️</div>
+                  <div class="cover-placeholder-icon">🖼️</div>
                   <div>Drop cover art or click to upload</div>
                 </div>
               </div>
@@ -1067,13 +1179,12 @@
                 <button id="downloadCoverBtn" type="button" class="sm" disabled>Save Cover</button>
                 <button id="clearCoverBtn" type="button" class="sm danger-ghost span-2" disabled>Clear Cover Art</button>
               </div>
-              <label class="toggle-label" style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;" title="Resize oversized artwork down to max 1000×1000 JPEG for broad player compatibility">
+              <label class="toggle-label cover-cap-toggle" title="Resize oversized artwork down to max 1000×1000 JPEG for broad player compatibility">
                 <input id="capCoverSizeToggle" type="checkbox" checked />
                 <span>Cap cover at 1000×1000</span>
               </label>
             </div>
 
-            <!-- Metadata Fields -->
             <div class="fields-grid">
               <div class="field">
                 <label for="tagTitle">Song Title</label>
@@ -1126,10 +1237,9 @@
             </div>
           </div>
 
-          <!-- Quick Formatting & Guess Actions -->
           <div class="toolbar-row">
             <div class="toolbar-group">
-              <button id="guessFromFilenameBtn" type="button" class="sm">Guess Artist & Title from Filename</button>
+              <button id="guessFromFilenameBtn" type="button" class="sm">Guess Artist &amp; Title from Filename</button>
               <button id="titleCaseBtn" type="button" class="sm">Title Case Fields</button>
               <button id="searchArtFromTagsBtn" type="button" class="sm">Find Art for Current Tags</button>
               <button id="revertOriginalBtn" type="button" class="sm" disabled title="Restore originally loaded MP3 tags & cover">Revert Original</button>
@@ -1139,7 +1249,6 @@
             </div>
           </div>
 
-          <!-- Export Filename & Save MP3 -->
           <div class="export-bar">
             <div class="export-filename-wrap">
               <label for="exportFilenameInput">Export Filename (defaults to Song Title • Shortcut: Ctrl/Cmd + Enter)</label>
@@ -1150,8 +1259,8 @@
                 <button id="resetFilenameBtn" type="button" class="sm" title="Reset filename to Song Title">Reset</button>
               </div>
             </div>
-            <button id="exportMp3Btn" type="button" class="success" style="padding:10px 16px;font-size:0.9rem;">
-              Save & Download MP3
+            <button id="exportMp3Btn" type="button" class="success export-submit-btn">
+              Save &amp; Download MP3
             </button>
           </div>
         </div>
@@ -1172,24 +1281,22 @@
       // =========================================================================
       const THEME_KEY = 'yt_mp3_editor_theme_v1';
       const themeToggleBtn = document.getElementById('themeToggleBtn');
-      const themeIcon = document.getElementById('themeIcon');
-      const themeLabel = document.getElementById('themeLabel');
 
       function applyTheme(theme) {
         const next = theme === 'dark' ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem(THEME_KEY, next);
-        if (next === 'dark') {
-          themeIcon.textContent = '☀️';
-          themeLabel.textContent = 'Light';
-        } else {
-          themeIcon.textContent = '🌙';
-          themeLabel.textContent = 'Dark';
-        }
+        try {
+          localStorage.setItem(THEME_KEY, next);
+        } catch (_) {}
       }
 
-      const savedTheme = localStorage.getItem(THEME_KEY) ||
-        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const savedTheme = (() => {
+        try {
+          return localStorage.getItem(THEME_KEY);
+        } catch (_) {
+          return null;
+        }
+      })() || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       applyTheme(savedTheme);
 
       themeToggleBtn.addEventListener('click', () => {
@@ -1198,12 +1305,13 @@
       });
 
       const mobileTabBtns = document.querySelectorAll('.mobile-tab-btn');
+      function setActiveMobileTab(tab) {
+        document.body.setAttribute('data-mobile-tab', tab);
+        mobileTabBtns.forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+      }
+
       mobileTabBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const tab = btn.dataset.tab;
-          document.body.setAttribute('data-mobile-tab', tab);
-          mobileTabBtns.forEach((b) => b.classList.toggle('active', b === btn));
-        });
+        btn.addEventListener('click', () => setActiveMobileTab(btn.dataset.tab));
       });
 
       // =========================================================================
@@ -1308,50 +1416,34 @@
       ];
 
       function decodeLatin1(bytes) {
-        let out = '';
-        for (let i = 0; i < bytes.length; i++) {
-          out += String.fromCharCode(bytes[i]);
+        return new TextDecoder('latin1').decode(bytes).replace(/\0+$/, '').trim();
+      }
+
+      function decodeUtf16Bytes(bytes, defaultLittleEndian) {
+        if (!bytes.length) return '';
+        let offset = 0;
+        let littleEndian = defaultLittleEndian;
+        if (bytes.length >= 2) {
+          if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+            littleEndian = true;
+            offset = 2;
+          } else if (bytes[0] === 0xFE && bytes[1] === 0xFF) {
+            littleEndian = false;
+            offset = 2;
+          }
         }
-        return out.replace(/\0+$/, '').trim();
+        const slice = bytes.subarray(offset);
+        const evenLen = slice.length - (slice.length % 2);
+        const decoded = new TextDecoder(littleEndian ? 'utf-16le' : 'utf-16be').decode(slice.subarray(0, evenLen));
+        return decoded.replace(/\0+$/, '').trim();
       }
 
       function decodeId3String(bytes, encodingByte) {
         if (!bytes || !bytes.length) return '';
         try {
-          if (encodingByte === 0) {
-            return new TextDecoder('latin1').decode(bytes).replace(/\0+$/, '').trim();
-          }
-          if (encodingByte === 1) {
-            let offset = 0;
-            let littleEndian = true;
-            if (bytes.length >= 2) {
-              if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
-                littleEndian = true;
-                offset = 2;
-              } else if (bytes[0] === 0xFE && bytes[1] === 0xFF) {
-                littleEndian = false;
-                offset = 2;
-              }
-            }
-            const view = new DataView(bytes.buffer, bytes.byteOffset + offset, bytes.byteLength - offset);
-            let str = '';
-            for (let i = 0; i + 1 < view.byteLength; i += 2) {
-              const code = view.getUint16(i, littleEndian);
-              if (code === 0) break;
-              str += String.fromCharCode(code);
-            }
-            return str.trim();
-          }
-          if (encodingByte === 2) {
-            const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-            let str = '';
-            for (let i = 0; i + 1 < view.byteLength; i += 2) {
-              const code = view.getUint16(i, false);
-              if (code === 0) break;
-              str += String.fromCharCode(code);
-            }
-            return str.trim();
-          }
+          if (encodingByte === 0) return decodeLatin1(bytes);
+          if (encodingByte === 1) return decodeUtf16Bytes(bytes, true);
+          if (encodingByte === 2) return decodeUtf16Bytes(bytes, false);
           return new TextDecoder('utf-8', { fatal: false }).decode(bytes).replace(/\0+$/, '').trim();
         } catch (_) {
           return decodeLatin1(bytes);
@@ -1369,11 +1461,11 @@
 
       function readUint32BE(bytes, offset) {
         return (
-          ((bytes[offset] * 16777216) +
+          (bytes[offset] * 16777216) +
           ((bytes[offset + 1] << 16) >>> 0) +
           ((bytes[offset + 2] << 8) >>> 0) +
-          (bytes[offset + 3] >>> 0)) >>> 0
-        );
+          (bytes[offset + 3] >>> 0)
+        ) >>> 0;
       }
 
       function bytesToDataUrl(bytes, mime) {
@@ -1577,28 +1669,16 @@
         return buildId3v23Frame(frameId, payload);
       }
 
-      function buildCommFrame(commentText) {
-        if (!commentText || !commentText.trim()) return null;
-        const encodedText = encodeUtf16Bom(commentText.trim());
+      function buildLangTextFrame(frameId, text) {
+        if (!text || !text.trim()) return null;
+        const encodedText = encodeUtf16Bom(text.trim());
         const emptyDescBom = new Uint8Array([0xFF, 0xFE, 0x00, 0x00]);
         const payload = new Uint8Array(1 + 3 + emptyDescBom.length + encodedText.length);
         payload[0] = 1;
         payload[1] = 0x65; payload[2] = 0x6e; payload[3] = 0x67;
         payload.set(emptyDescBom, 4);
         payload.set(encodedText, 4 + emptyDescBom.length);
-        return buildId3v23Frame('COMM', payload);
-      }
-
-      function buildUsltFrame(lyricsText) {
-        if (!lyricsText || !lyricsText.trim()) return null;
-        const encodedLyrics = encodeUtf16Bom(lyricsText.trim());
-        const emptyDescBom = new Uint8Array([0xFF, 0xFE, 0x00, 0x00]);
-        const payload = new Uint8Array(1 + 3 + emptyDescBom.length + encodedLyrics.length);
-        payload[0] = 1;
-        payload[1] = 0x65; payload[2] = 0x6e; payload[3] = 0x67;
-        payload.set(emptyDescBom, 4);
-        payload.set(encodedLyrics, 4 + emptyDescBom.length);
-        return buildId3v23Frame('USLT', payload);
+        return buildId3v23Frame(frameId, payload);
       }
 
       function buildApicFrame(cover) {
@@ -1657,8 +1737,8 @@
           buildTextFrame('TCON', tags.genre),
           buildTextFrame('TCOM', tags.composer),
           buildTextFrame('TBPM', tags.bpm ? String(tags.bpm) : ''),
-          buildCommFrame(tags.comment),
-          buildUsltFrame(tags.lyrics),
+          buildLangTextFrame('COMM', tags.comment),
+          buildLangTextFrame('USLT', tags.lyrics),
           buildApicFrame(cover)
         ].filter(Boolean);
 
@@ -1749,15 +1829,19 @@
       // =========================================================================
       const capCoverSizeToggle = document.getElementById('capCoverSizeToggle');
 
+      function finalizeCoverPayload(dataUrl, mime) {
+        const parsed = dataUrlToBytes(dataUrl);
+        return {
+          dataUrl,
+          bytes: parsed ? parsed.bytes : null,
+          mime: mime || (parsed ? parsed.mime : 'image/jpeg')
+        };
+      }
+
       function maybeCapCoverImage(dataUrl, mime, maxDim = 1000) {
         return new Promise((resolve) => {
           if (!capCoverSizeToggle.checked || !dataUrl || !dataUrl.startsWith('data:')) {
-            const parsed = dataUrlToBytes(dataUrl);
-            resolve({
-              dataUrl,
-              bytes: parsed ? parsed.bytes : null,
-              mime: mime || (parsed ? parsed.mime : 'image/jpeg')
-            });
+            resolve(finalizeCoverPayload(dataUrl, mime));
             return;
           }
 
@@ -1766,39 +1850,19 @@
             const w = img.naturalWidth || img.width;
             const h = img.naturalHeight || img.height;
             if (!w || !h || (w <= maxDim && h <= maxDim && mime === 'image/jpeg')) {
-              const parsed = dataUrlToBytes(dataUrl);
-              resolve({
-                dataUrl,
-                bytes: parsed ? parsed.bytes : null,
-                mime: mime || (parsed ? parsed.mime : 'image/jpeg')
-              });
+              resolve(finalizeCoverPayload(dataUrl, mime));
               return;
             }
 
             const scale = Math.min(1, maxDim / Math.max(w, h));
-            const targetW = Math.max(1, Math.round(w * scale));
-            const targetH = Math.max(1, Math.round(h * scale));
             const canvas = document.createElement('canvas');
-            canvas.width = targetW;
-            canvas.height = targetH;
+            canvas.width = Math.max(1, Math.round(w * scale));
+            canvas.height = Math.max(1, Math.round(h * scale));
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, targetW, targetH);
-            const outDataUrl = canvas.toDataURL('image/jpeg', 0.88);
-            const parsed = dataUrlToBytes(outDataUrl);
-            resolve({
-              dataUrl: outDataUrl,
-              bytes: parsed ? parsed.bytes : null,
-              mime: 'image/jpeg'
-            });
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(finalizeCoverPayload(canvas.toDataURL('image/jpeg', 0.88), 'image/jpeg'));
           };
-          img.onerror = () => {
-            const parsed = dataUrlToBytes(dataUrl);
-            resolve({
-              dataUrl,
-              bytes: parsed ? parsed.bytes : null,
-              mime: mime || (parsed ? parsed.mime : 'image/jpeg')
-            });
-          };
+          img.onerror = () => resolve(finalizeCoverPayload(dataUrl, mime));
           img.src = dataUrl;
         });
       }
@@ -1860,19 +1924,18 @@
       }
 
       function renderCover(cover) {
-        if (cover && cover.dataUrl) {
+        const hasCover = Boolean(cover && cover.dataUrl);
+        if (hasCover) {
           coverPreviewImg.src = cover.dataUrl;
           coverPreviewImg.style.display = 'block';
           coverPlaceholder.style.display = 'none';
-          downloadCoverBtn.disabled = false;
-          clearCoverBtn.disabled = false;
         } else {
           coverPreviewImg.removeAttribute('src');
           coverPreviewImg.style.display = 'none';
           coverPlaceholder.style.display = 'block';
-          downloadCoverBtn.disabled = true;
-          clearCoverBtn.disabled = true;
         }
+        downloadCoverBtn.disabled = !hasCover;
+        clearCoverBtn.disabled = !hasCover;
       }
 
       function loadRecordIntoForm() {
@@ -1956,17 +2019,19 @@
           showToast('Please choose a valid image file (JPG, PNG, WebP).', 'error');
           return;
         }
+        const targetRec = getCurrentRecord();
         const reader = new FileReader();
         reader.onload = async () => {
           const capped = await maybeCapCoverImage(reader.result, file.type, 1000);
-          const rec = getCurrentRecord();
-          rec.cover = {
+          targetRec.cover = {
             dataUrl: capped.dataUrl,
             bytes: capped.bytes,
             mime: capped.mime,
             label: file.name
           };
-          renderCover(rec.cover);
+          if (getCurrentRecord() === targetRec) {
+            renderCover(targetRec.cover);
+          }
           showToast('Cover art updated');
         };
         reader.readAsDataURL(file);
@@ -2091,8 +2156,7 @@
         artQueryInput.value = q;
         searchCoverArt(q);
         if (window.innerWidth <= 720) {
-          document.body.setAttribute('data-mobile-tab', 'art');
-          mobileTabBtns.forEach((b) => b.classList.toggle('active', b.dataset.tab === 'art'));
+          setActiveMobileTab('art');
         }
       });
 
@@ -2134,64 +2198,76 @@
         }
         queueSection.style.display = 'block';
         queueCount.textContent = String(state.queue.length);
-        queueList.innerHTML = '';
+        const fragment = document.createDocumentFragment();
 
         state.queue.forEach((item, idx) => {
           const chip = document.createElement('div');
           chip.className = `queue-chip ${idx === state.activeIndex ? 'active' : ''}`;
+          chip.dataset.index = String(idx);
+
           const label = item.tags.title
             ? `${item.tags.artist ? item.tags.artist + ' - ' : ''}${item.tags.title}`
             : item.file.name.replace(/\.mp3$/i, '');
 
           const textBtn = document.createElement('button');
           textBtn.type = 'button';
-          textBtn.style.cssText = 'border:0;background:transparent;padding:0;font-size:inherit;font-weight:inherit;';
+          textBtn.className = 'queue-label-btn';
+          textBtn.dataset.action = 'select';
           textBtn.textContent = `${idx + 1}. ${label}`;
-          textBtn.addEventListener('click', () => {
-            state.activeIndex = idx;
-            loadRecordIntoForm();
-            renderQueueUI();
-          });
 
           const leftBtn = document.createElement('button');
           leftBtn.type = 'button';
           leftBtn.className = 'queue-mini-btn';
+          leftBtn.dataset.action = 'left';
           leftBtn.title = 'Move left';
           leftBtn.textContent = '‹';
           leftBtn.disabled = idx === 0;
-          leftBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            moveQueueItem(idx, -1);
-          });
 
           const rightBtn = document.createElement('button');
           rightBtn.type = 'button';
           rightBtn.className = 'queue-mini-btn';
+          rightBtn.dataset.action = 'right';
           rightBtn.title = 'Move right';
           rightBtn.textContent = '›';
           rightBtn.disabled = idx === state.queue.length - 1;
-          rightBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            moveQueueItem(idx, 1);
-          });
 
           const removeBtn = document.createElement('button');
           removeBtn.type = 'button';
           removeBtn.className = 'queue-mini-btn queue-remove';
+          removeBtn.dataset.action = 'remove';
           removeBtn.title = 'Remove from queue';
           removeBtn.textContent = '×';
-          removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            removeQueueItem(idx);
-          });
 
           chip.appendChild(textBtn);
           chip.appendChild(leftBtn);
           chip.appendChild(rightBtn);
           chip.appendChild(removeBtn);
-          queueList.appendChild(chip);
+          fragment.appendChild(chip);
         });
+
+        queueList.replaceChildren(fragment);
       }
+
+      queueList.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        const chip = e.target.closest('.queue-chip');
+        if (!btn || !chip) return;
+        const idx = parseInt(chip.dataset.index, 10);
+        if (Number.isNaN(idx)) return;
+
+        const action = btn.dataset.action;
+        if (action === 'select') {
+          state.activeIndex = idx;
+          loadRecordIntoForm();
+          renderQueueUI();
+        } else if (action === 'left') {
+          moveQueueItem(idx, -1);
+        } else if (action === 'right') {
+          moveQueueItem(idx, 1);
+        } else if (action === 'remove') {
+          removeQueueItem(idx);
+        }
+      });
 
       function removeQueueItem(idx) {
         const removed = state.queue[idx];
@@ -2354,6 +2430,17 @@
       // =========================================================================
       // 10. EXPORT & SAVE MP3 (SINGLE + BATCH + CTRL/CMD + ENTER)
       // =========================================================================
+      function triggerBlobDownload(blob, finalName) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = finalName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }
+
       function buildExportBlobForRecord(rec, filenameOverride) {
         const outBuffer = writeMp3WithTags(rec.arrayBuffer, rec.tags, rec.cover);
         const blob = new Blob([outBuffer], { type: 'audio/mpeg' });
@@ -2374,28 +2461,26 @@
           exportMp3Btn.textContent = 'Encoding ID3...';
 
           const { outBuffer, blob, finalName } = buildExportBlobForRecord(rec, exportFilenameInput.value);
-          const url = URL.createObjectURL(blob);
-
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = finalName;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
+          triggerBlobDownload(blob, finalName);
 
           const wasPlaying = !audioPlayer.paused;
           const prevTime = audioPlayer.currentTime || 0;
-          if (rec.objectUrl) URL.revokeObjectURL(rec.objectUrl);
-          rec.objectUrl = URL.createObjectURL(blob);
+          const nextUrl = URL.createObjectURL(blob);
+          const oldUrl = rec.objectUrl;
+          rec.objectUrl = nextUrl;
           rec.arrayBuffer = outBuffer;
-          audioPlayer.src = rec.objectUrl;
+          audioPlayer.src = nextUrl;
+          if (oldUrl) URL.revokeObjectURL(oldUrl);
+
           if (prevTime > 0) {
+            const restoreTarget = nextUrl;
             audioPlayer.addEventListener('loadedmetadata', () => {
-              audioPlayer.currentTime = Math.min(prevTime, audioPlayer.duration || prevTime);
-              if (wasPlaying) audioPlayer.play().catch(() => {});
+              if (audioPlayer.src === restoreTarget) {
+                audioPlayer.currentTime = Math.min(prevTime, audioPlayer.duration || prevTime);
+                if (wasPlaying) audioPlayer.play().catch(() => {});
+              }
             }, { once: true });
           }
-          setTimeout(() => URL.revokeObjectURL(url), 4000);
 
           showToast(`Saved ${finalName}`, 'success');
         } catch (err) {
@@ -2415,14 +2500,7 @@
             const item = state.queue[i];
             const { outBuffer, blob, finalName } = buildExportBlobForRecord(item);
             item.arrayBuffer = outBuffer;
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = finalName;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            triggerBlobDownload(blob, finalName);
             await new Promise((r) => setTimeout(r, 240));
           }
           showToast(`Exported all ${state.queue.length} queued MP3s`, 'success');
@@ -2454,6 +2532,7 @@
       const artResultsGrid = document.getElementById('artResultsGrid');
 
       let artSearchSeq = 0;
+      let latestArtItems = [];
 
       function extractYouTubeTitleFromUrl(urlStr) {
         const trimmed = (urlStr || '').trim();
@@ -2575,25 +2654,25 @@
         if (!data || !Array.isArray(data.results)) return [];
         return data.results
           .filter((r) => r.artworkUrl100)
-          .map((r) => {
-            const hiRes = upscaleArtworkUrl(r.artworkUrl100);
-            return {
-              id: `it_${r.trackId || r.collectionId || Math.random()}`,
-              source: 'iTunes',
-              title: r.trackName || r.collectionName || term,
-              artist: r.artistName || '',
-              album: r.collectionName || '',
-              year: r.releaseDate ? String(r.releaseDate).slice(0, 4) : '',
-              genre: r.primaryGenreName || '',
-              thumbUrl: r.artworkUrl100,
-              fullUrl: hiRes,
-              resLabel: '1000×1000'
-            };
-          });
+          .map((r, idx) => ({
+            id: `it_${r.trackId || r.collectionId || idx}`,
+            source: 'iTunes',
+            title: r.trackName || r.collectionName || term,
+            artist: r.artistName || '',
+            album: r.collectionName || '',
+            year: r.releaseDate ? String(r.releaseDate).slice(0, 4) : '',
+            genre: r.primaryGenreName || '',
+            thumbUrl: r.artworkUrl100,
+            fullUrl: upscaleArtworkUrl(r.artworkUrl100),
+            resLabel: '1000×1000'
+          }));
       }
 
       function renderArtCards(items, seq) {
+        if (seq !== artSearchSeq) return;
+        latestArtItems = items;
         artResultsGrid.innerHTML = '';
+
         if (!items.length) {
           artCountBadge.textContent = '0 found';
           artStatusText.textContent = 'No matching cover art found. Try another search or uncheck "Hide noisy / alt releases".';
@@ -2603,15 +2682,14 @@
         artCountBadge.textContent = `${items.length} covers`;
         artStatusText.textContent = 'Click any cover to apply artwork & track info.';
 
-        let visibleCount = 0;
+        let visibleCount = items.length;
+        const fragment = document.createDocumentFragment();
 
-        items.forEach((item) => {
-          if (seq !== artSearchSeq) return;
-          visibleCount += 1;
-
+        items.forEach((item, idx) => {
           const card = document.createElement('button');
           card.type = 'button';
           card.className = 'art-card';
+          card.dataset.artIndex = String(idx);
           card.title = `${item.title} — ${item.artist} (${item.album || item.source})`;
 
           const thumbWrap = document.createElement('div');
@@ -2683,10 +2761,19 @@
           card.appendChild(titleEl);
           card.appendChild(subEl);
 
-          card.addEventListener('click', () => applyCoverResult(item));
-          artResultsGrid.appendChild(card);
+          fragment.appendChild(card);
         });
+
+        artResultsGrid.appendChild(fragment);
       }
+
+      artResultsGrid.addEventListener('click', (e) => {
+        const card = e.target.closest('.art-card');
+        if (!card) return;
+        const idx = parseInt(card.dataset.artIndex, 10);
+        const item = latestArtItems[idx];
+        if (item) applyCoverResult(item);
+      });
 
       async function loadImageViaCanvas(url) {
         return new Promise((resolve) => {
@@ -2758,31 +2845,32 @@
       }
 
       async function applyCoverResult(item) {
-        const rec = getCurrentRecord();
-        if (item.title) rec.tags.title = item.title;
-        if (item.artist) rec.tags.artist = item.artist;
-        if (item.album) rec.tags.album = item.album;
-        if (!rec.tags.albumArtist && item.artist) rec.tags.albumArtist = item.artist;
+        const targetRec = getCurrentRecord();
+        if (item.title) targetRec.tags.title = item.title;
+        if (item.artist) targetRec.tags.artist = item.artist;
+        if (item.album) targetRec.tags.album = item.album;
+        if (!targetRec.tags.albumArtist && item.artist) targetRec.tags.albumArtist = item.artist;
 
         if (autoFillMetaToggle.checked) {
-          if (!rec.tags.year && item.year) rec.tags.year = item.year;
-          if (!rec.tags.genre && item.genre) rec.tags.genre = item.genre;
+          if (!targetRec.tags.year && item.year) targetRec.tags.year = item.year;
+          if (!targetRec.tags.genre && item.genre) targetRec.tags.genre = item.genre;
         }
 
-        rec.filenameTouched = false;
+        targetRec.filenameTouched = false;
         showToast('Applying cover art & metadata...', 'info', 1800);
 
         const coverObj = await fetchImageAsCover(item.fullUrl, item.thumbUrl, item.album || item.title);
         if (coverObj && coverObj.dataUrl) {
-          rec.cover = coverObj;
+          targetRec.cover = coverObj;
         }
 
-        loadRecordIntoForm();
+        if (getCurrentRecord() === targetRec) {
+          loadRecordIntoForm();
+        }
         if (state.activeIndex >= 0) renderQueueUI();
 
         if (window.innerWidth <= 720) {
-          document.body.setAttribute('data-mobile-tab', 'editor');
-          mobileTabBtns.forEach((b) => b.classList.toggle('active', b.dataset.tab === 'editor'));
+          setActiveMobileTab('editor');
         }
         showToast(`Applied "${item.album || item.title}" (${item.source})`, 'success');
       }
@@ -2800,7 +2888,6 @@
         artResultsGrid.innerHTML = '';
 
         let combined = await queryItunesCovers(query);
-
         if (seq !== artSearchSeq) return;
 
         if (hideNoisyToggle.checked) {
